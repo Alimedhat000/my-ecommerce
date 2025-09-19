@@ -126,3 +126,14 @@
 {"level":"info","message":"GET /api-docs/swagger-ui-bundle.js - ::1","service":"user-service","timestamp":"2025-08-11 14:46:51"}
 {"level":"info","message":"GET /api-docs/swagger-ui-standalone-preset.js - ::1","service":"user-service","timestamp":"2025-08-11 14:46:51"}
 {"level":"info","message":"GET /api-docs/swagger-ui-init.js - ::1","service":"user-service","timestamp":"2025-08-11 14:46:51"}
+{"level":"info","message":"Server is running on port 3002","service":"user-service","timestamp":"2025-09-20 02:23:49"}
+{"level":"info","message":"Swagger docs: http://localhost:3002/api-docs","service":"user-service","timestamp":"2025-09-20 02:23:49"}
+{"level":"info","message":"GET /api-docs - ::1","service":"user-service","timestamp":"2025-09-20 02:23:57"}
+{"level":"info","message":"GET /api-docs/ - ::1","service":"user-service","timestamp":"2025-09-20 02:23:57"}
+{"level":"info","message":"GET /api-docs/swagger-ui.css - ::1","service":"user-service","timestamp":"2025-09-20 02:23:57"}
+{"level":"info","message":"GET /api-docs/swagger-ui-bundle.js - ::1","service":"user-service","timestamp":"2025-09-20 02:23:57"}
+{"level":"info","message":"GET /api-docs/swagger-ui-init.js - ::1","service":"user-service","timestamp":"2025-09-20 02:23:57"}
+{"level":"info","message":"GET /api-docs/swagger-ui-standalone-preset.js - ::1","service":"user-service","timestamp":"2025-09-20 02:23:57"}
+{"level":"info","message":"GET /api-docs/favicon-32x32.png - ::1","service":"user-service","timestamp":"2025-09-20 02:23:57"}
+{"level":"info","message":"GET /favicon.ico - ::1","service":"user-service","timestamp":"2025-09-20 02:24:28"}
+{"level":"warn","message":"404 - Route Not Found - /favicon.ico - GET - ::1","service":"user-service","timestamp":"2025-09-20 02:24:28"}

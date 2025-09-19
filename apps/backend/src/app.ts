@@ -6,7 +6,7 @@ import compression from "compression";
 import rateLimit from "express-rate-limit";
 import hpp from "hpp";
 import swaggerUi from "swagger-ui-express";
-import auth from "http-auth";
+import basicAuth from "express-basic-auth";
 import cookieParser from "cookie-parser";
 import csurf from "csurf";
 
@@ -130,15 +130,15 @@ if (NODE_ENV === "production") {
   const swaggerUser = process.env.SWAGGER_USER || "admin";
   const swaggerPass = process.env.SWAGGER_PASSWORD || "changeme";
 
-  const basic = auth.basic(
-    { realm: "Swagger UI" },
-    (username, password, callback) => {
-      callback(username === swaggerUser && password === swaggerPass);
-    }
+  app.use(
+    "/api-docs",
+    basicAuth({
+      users: { [swaggerUser]: swaggerPass },
+      challenge: true,
+    }),
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerSpec, { explorer: true })
   );
-
-  // Using `auth.connect` directly (from our custom .d.ts)
-  app.use("/api-docs", auth.connect(basic));
 }
 
 app.use(
