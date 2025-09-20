@@ -1,15 +1,20 @@
+// eslint.config.ts
 import js from '@eslint/js';
-import ts from '@typescript-eslint/eslint-plugin';
+import tseslint from 'typescript-eslint';
 import prettier from 'eslint-plugin-prettier';
 
 export default [
+    {
+        ignores: ['eslint.config.*', 'dist/**'], // <--- top-level ignore (applies to the whole run)
+    },
     js.configs.recommended,
+    ...tseslint.configs.recommendedTypeChecked, // strict TypeScript rules with type info
     {
         files: ['**/*.ts'],
-        ignores: ['**/*.config.ts'], // ok here at top-level of config object
         languageOptions: {
             parserOptions: {
-                project: './tsconfig.json', // ensures it uses your TS project
+                project: './tsconfig.json',
+                tsconfigRootDir: __dirname,
             },
             globals: {
                 process: 'readonly',
@@ -17,17 +22,31 @@ export default [
             },
         },
         plugins: {
-            '@typescript-eslint': ts,
             prettier,
         },
         rules: {
-            indent: ['error', 4],
-            quotes: ['error', 'single'],
-            semi: ['error', 'always'],
-            'linebreak-style': ['error', 'unix'],
+            // TS-specific rules
+            '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+            '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
+            '@typescript-eslint/no-floating-promises': 'error',
+            '@typescript-eslint/explicit-function-return-type': 'off',
+            '@typescript-eslint/no-unsafe-function-type': 'off',
+
+            // General
             eqeqeq: ['error', 'always'],
-            'max-len': ['error', { code: 100 }],
-            'prettier/prettier': ['error', { singleQuote: true, semi: true }],
+            'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
+            'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
+
+            // Prettier
+            'prettier/prettier': [
+                'error',
+                {
+                    singleQuote: true,
+                    semi: true,
+                    tabWidth: 4,
+                    printWidth: 100,
+                },
+            ],
         },
     },
 ];

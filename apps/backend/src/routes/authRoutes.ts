@@ -1,7 +1,7 @@
 // src/routes/authRoutes.ts
-import express from "express";
-import * as authController from "../controllers/authController";
-import { authenticate } from "../middleware/authMiddleware";
+import express from 'express';
+import * as authController from '../controllers/authController';
+import { authenticate } from '../middleware/authMiddleware';
 
 const router = express.Router();
 
@@ -41,7 +41,7 @@ const router = express.Router();
  *       400:
  *         description: Validation error or user already exists
  */
-router.post("/register", authController.register);
+router.post('/register', authController.register);
 
 /**
  * @swagger
@@ -75,7 +75,7 @@ router.post("/register", authController.register);
  *       401:
  *         description: Invalid credentials
  */
-router.post("/login", authController.login);
+router.post('/login', authController.login);
 
 /**
  * @swagger
@@ -94,7 +94,7 @@ router.post("/login", authController.login);
  *       401:
  *         description: Invalid or expired refresh token
  */
-router.post("/refresh", authController.refreshTokens);
+router.post('/refresh', authController.refreshTokens);
 
 /**
  * @swagger
@@ -110,6 +110,6 @@ router.post("/refresh", authController.refreshTokens);
  *       401:
  *         description: Authentication required
  */
-router.post("/logout", authenticate, authController.logout);
+router.post('/logout', authenticate, authController.logout);
 
 export default router;
