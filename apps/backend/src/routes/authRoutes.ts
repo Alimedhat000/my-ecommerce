@@ -82,7 +82,21 @@ router.post('/login', authController.login);
  * /api/auth/refresh:
  *   post:
  *     summary: Refresh access token
+ *     description: Issues a new access token using a valid refresh token.
+ *                  The refresh token is checked from the httpOnly cookie first,
+ *                  then from the request body.
  *     tags: [Auth]
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *                 description: Refresh token (only required if not set in cookies)
+ *                 example: abc123def456
  *     responses:
  *       200:
  *         description: Tokens refreshed successfully
@@ -91,6 +105,37 @@ router.post('/login', authController.login);
  *             description: New refresh token set as httpOnly cookie
  *             schema:
  *               type: string
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Tokens refreshed successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     accessToken:
+ *                       type: string
+ *                       description: Newly issued access token
+ *                       example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *                     user:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: integer
+ *                           example: 42
+ *                         name:
+ *                           type: string
+ *                           example: John Doe
+ *                         email:
+ *                           type: string
+ *                           example: john@example.com
+ *
  *       401:
  *         description: Invalid or expired refresh token
  */
@@ -101,12 +146,24 @@ router.post('/refresh', authController.refreshTokens);
  * /api/auth/logout:
  *   post:
  *     summary: Logout user
+ *     description: Clears the refresh token cookie and invalidates the session.
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Logged out successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Logged out successfully
  *       401:
  *         description: Authentication required
  */

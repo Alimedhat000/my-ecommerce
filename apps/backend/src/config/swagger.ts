@@ -4,15 +4,31 @@ const options: swaggerJsdoc.Options = {
     definition: {
         openapi: '3.0.0',
         info: {
-            title: 'Express TypeScript API',
+            title: 'Ecommerce API',
             version: '1.0.0',
-            description: 'A simple Express TypeScript API with Prisma and authentication',
+            description:
+                'RESTful Ecommerce API built with Express, TypeScript, and Prisma. Includes authentication, product management, orders, payments, and user management.',
+            license: {
+                name: 'MIT',
+                url: 'https://opensource.org/licenses/MIT',
+            },
         },
         servers: [
             {
-                url: `http://localhost:${process.env.PORT || 3000}`,
-                description: 'Development server',
+                url: `http://localhost:${process.env.PORT || 3000}/api`,
+                description: 'Local development server',
             },
+            {
+                url: 'https://api.yourecommerce.com',
+                description: 'Production server(Not live)',
+            },
+        ],
+        tags: [
+            { name: 'Auth', description: 'User authentication and authorization' },
+            { name: 'Users', description: 'User management and profiles' },
+            { name: 'Products', description: 'Product catalog and details' },
+            { name: 'Orders', description: 'Customer orders and order management' },
+            { name: 'Payments', description: 'Payment processing and transactions' },
         ],
     },
     apis: ['./src/routes/*.ts'],
