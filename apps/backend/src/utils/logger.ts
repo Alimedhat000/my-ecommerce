@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 
 // Ensure logs directory exists
-const logDir = path.join(__dirname, '..', 'logs');
+const logDir = path.join(__dirname, '..', '..', 'logs');
 if (!fs.existsSync(logDir)) {
     fs.mkdirSync(logDir);
 }
@@ -20,8 +20,8 @@ const logger = winston.createLogger({
     ),
     defaultMeta: { service: 'user-service' },
     transports: [
-        new winston.transports.File({ filename: 'error.log', level: 'error' }),
-        new winston.transports.File({ filename: 'combined.log' }),
+        new winston.transports.File({ filename: path.join(logDir, 'error.log'), level: 'error' }),
+        new winston.transports.File({ filename: path.join(logDir, 'combined.log') }),
     ],
 });
 
