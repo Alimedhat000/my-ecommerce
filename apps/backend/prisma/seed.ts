@@ -105,6 +105,24 @@ async function main() {
 
         console.log(`Seeded product: ${createdProduct.title}`);
 
+        // Now link variants to their featured images
+        for (const variant of product.variants || []) {
+            if (variant.featured_image?.id) {
+                // Find the image by its shopifyId
+                const image = await prisma.productImage.findUnique({
+                    where: { shopifyId: BigInt(variant.featured_image.id) },
+                });
+
+                if (image) {
+                    // Update the variant to link to this image
+                    await prisma.productVariant.update({
+                        where: { shopifyId: BigInt(variant.id) },
+                        data: { imageId: image.id },
+                    });
+                }
+            }
+        }
+
         // Link product to its collections
         for (const cid of product.collectionIds || []) {
             const collection = await prisma.collection.findUnique({
