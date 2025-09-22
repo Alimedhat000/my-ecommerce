@@ -122,23 +122,31 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 // ---------- Protect Swagger UI ----------
-if (NODE_ENV === 'production') {
+if (process.env.NODE_ENV === 'production') {
     const swaggerUser = process.env.SWAGGER_USER || 'admin';
     const swaggerPass = process.env.SWAGGER_PASSWORD || 'changeme';
 
     app.use(
         '/api-docs',
-        basicAuth({
-            users: { [swaggerUser]: swaggerPass },
-            challenge: true,
-        }),
+        basicAuth({ users: { [swaggerUser]: swaggerPass }, challenge: true }),
+        (req: any, res: any, next: any) => {
+            res.removeHeader('Content-Security-Policy'); // disable CSP for Swagger
+            next();
+        },
+        swaggerUi.serve,
+        swaggerUi.setup(swaggerSpec, { explorer: true })
+    );
+} else {
+    app.use(
+        '/api-docs',
+        (req: any, res: any, next: any) => {
+            res.removeHeader('Content-Security-Policy'); // disable CSP for Swagger
+            next();
+        },
         swaggerUi.serve,
         swaggerUi.setup(swaggerSpec, { explorer: true })
     );
 }
-
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: true }));
-
 // ---------- Routes ----------
 app.use('/api', apiRouter);
 
