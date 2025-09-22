@@ -57,7 +57,7 @@ model Address {
 // Collections (like categories but more flexible)
 model Collection {
   id          Int     @id @default(autoincrement())
-  shopifyId   BigInt? @unique
+  shopifyId   String? @unique
   title       String
   handle      String  @unique
   description String?
@@ -91,7 +91,7 @@ model ProductCollection {
 
 model Product {
   id          Int           @id @default(autoincrement())
-  shopifyId   BigInt?       @unique
+  shopifyId   String?       @unique
   title       String
   handle      String        @unique //url friendly identifier 
   bodyHtml    String? // Rich text description
@@ -119,7 +119,7 @@ model Product {
 // Product variants handle different combinations (size + color, etc.)
 model ProductVariant {
   id               Int      @id @default(autoincrement())
-  shopifyId        BigInt?  @unique
+  shopifyId        String?  @unique
   title            String // e.g., "Red / Large"
   sku              String?
   barcode          String?
@@ -168,13 +168,13 @@ model ProductOption {
 // Images can be linked to specific variants
 model ProductImage {
   id         Int      @id @default(autoincrement())
-  shopifyId  BigInt?  @unique
+  shopifyId  String?  @unique
   src        String // Cloudinary URL
   alt        String?
   width      Int?
   height     Int?
   position   Int      @default(1)
-  variantIds BigInt[] // Which variants use this image
+  variantIds String[] // Which variants use this image
 
   product   Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId Int

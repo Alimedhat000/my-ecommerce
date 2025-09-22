@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const prisma = new PrismaClient();
-// console.log(prisma);
+
 function safeDate(dateStr?: string) {
     if (!dateStr) return new Date();
     const d = new Date(dateStr);
@@ -11,14 +11,14 @@ function safeDate(dateStr?: string) {
 }
 
 async function main() {
-    const filePath = path.join(__dirname, 'data', 'shop_data.json'); // contains collections + products
+    const filePath = path.join(__dirname, 'data', 'shop_data.json');
     const rawData = fs.readFileSync(filePath, 'utf-8');
     const { collections, products } = JSON.parse(rawData);
 
     // Seed collections
     for (const collection of collections) {
         await prisma.collection.upsert({
-            where: { shopifyId: BigInt(collection.id) },
+            where: { shopifyId: String(collection.id) },
             update: {
                 title: collection.title,
                 handle: collection.handle,
@@ -26,7 +26,7 @@ async function main() {
                 updatedAt: new Date(),
             },
             create: {
-                shopifyId: BigInt(collection.id),
+                shopifyId: String(collection.id),
                 title: collection.title,
                 handle: collection.handle,
                 description: collection.description,
@@ -41,14 +41,14 @@ async function main() {
     // Seed products
     for (const product of products) {
         const createdProduct = await prisma.product.upsert({
-            where: { shopifyId: BigInt(product.id) },
+            where: { shopifyId: String(product.id) },
             update: {
                 title: product.title,
                 handle: product.handle,
                 updatedAt: new Date(),
             },
             create: {
-                shopifyId: BigInt(product.id),
+                shopifyId: String(product.id),
                 title: product.title,
                 handle: product.handle,
                 bodyHtml: product.body_html,
@@ -61,19 +61,19 @@ async function main() {
 
                 images: {
                     create: (product.images || []).map((img: any) => ({
-                        shopifyId: BigInt(img.id),
+                        shopifyId: String(img.id),
                         src: img.src,
                         alt: img.alt,
                         width: img.width,
                         height: img.height,
                         position: img.position,
-                        variantIds: (img.variant_ids || []).map((id: any) => BigInt(id)),
+                        variantIds: (img.variant_ids || []).map((id: any) => String(id)),
                     })),
                 },
 
                 variants: {
                     create: (product.variants || []).map((variant: any) => ({
-                        shopifyId: BigInt(variant.id),
+                        shopifyId: String(variant.id),
                         title: variant.title,
                         sku: variant.sku,
                         barcode: variant.barcode || null,
@@ -105,20 +105,20 @@ async function main() {
 
         console.log(`Seeded product: ${createdProduct.title}`);
 
-        // Now link variants to their featured images
-        for (const variant of product.variants || []) {
-            if (variant.featured_image?.id) {
-                // Find the image by its shopifyId
+        // Link variants to images based on image.variant_ids
+        for (const img of product.images || []) {
+            if (img.variant_ids && img.variant_ids.length > 0) {
                 const image = await prisma.productImage.findUnique({
-                    where: { shopifyId: BigInt(variant.featured_image.id) },
+                    where: { shopifyId: String(img.id) },
                 });
 
                 if (image) {
-                    // Update the variant to link to this image
-                    await prisma.productVariant.update({
-                        where: { shopifyId: BigInt(variant.id) },
-                        data: { imageId: image.id },
-                    });
+                    for (const variantShopifyId of img.variant_ids) {
+                        await prisma.productVariant.update({
+                            where: { shopifyId: String(variantShopifyId) },
+                            data: { imageId: image.id },
+                        });
+                    }
                 }
             }
         }
@@ -126,7 +126,7 @@ async function main() {
         // Link product to its collections
         for (const cid of product.collectionIds || []) {
             const collection = await prisma.collection.findUnique({
-                where: { shopifyId: BigInt(cid) },
+                where: { shopifyId: String(cid) },
             });
 
             if (collection) {
