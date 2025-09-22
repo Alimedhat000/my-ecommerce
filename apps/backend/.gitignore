@@ -3,3 +3,5 @@ node_modules
 .env
 # Ignore log files
 logs
+# Ignore database files
+prisma/data/*.json
