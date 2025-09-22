@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const prisma = new PrismaClient();
-
+// console.log(prisma);
 function safeDate(dateStr?: string) {
     if (!dateStr) return new Date();
     const d = new Date(dateStr);
@@ -61,19 +61,19 @@ async function main() {
 
                 images: {
                     create: (product.images || []).map((img: any) => ({
-                        shopifyId: img.id ? BigInt(img.id) : null,
+                        shopifyId: BigInt(img.id),
                         src: img.src,
                         alt: img.alt,
                         width: img.width,
                         height: img.height,
                         position: img.position,
-                        variantIds: img.variant_ids || [],
+                        variantIds: (img.variant_ids || []).map((id: any) => BigInt(id)),
                     })),
                 },
 
                 variants: {
                     create: (product.variants || []).map((variant: any) => ({
-                        shopifyId: variant.id ? BigInt(variant.id) : null,
+                        shopifyId: BigInt(variant.id),
                         title: variant.title,
                         sku: variant.sku,
                         barcode: variant.barcode || null,

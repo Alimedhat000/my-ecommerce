@@ -121,7 +121,7 @@ model ProductVariant {
   id               Int      @id @default(autoincrement())
   shopifyId        BigInt?  @unique
   title            String // e.g., "Red / Large"
-  sku              String?  @unique
+  sku              String?
   barcode          String?
   price            Decimal  @db.Decimal(10, 2)
   compareAtPrice   Decimal? @db.Decimal(10, 2) // Original price for discounts
@@ -167,14 +167,14 @@ model ProductOption {
 
 // Images can be linked to specific variants
 model ProductImage {
-  id         Int     @id @default(autoincrement())
-  shopifyId  BigInt? @unique
+  id         Int      @id @default(autoincrement())
+  shopifyId  BigInt?  @unique
   src        String // Cloudinary URL
   alt        String?
   width      Int?
   height     Int?
-  position   Int     @default(1)
-  variantIds Int[] // Which variants use this image
+  position   Int      @default(1)
+  variantIds BigInt[] // Which variants use this image
 
   product   Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId Int
