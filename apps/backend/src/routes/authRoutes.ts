@@ -7,7 +7,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/auth/register:
+ * /auth/register:
  *   post:
  *     summary: Register a new user
  *     tags: [Auth]
@@ -45,7 +45,7 @@ router.post('/register', authController.register);
 
 /**
  * @swagger
- * /api/auth/login:
+ * /auth/login:
  *   post:
  *     summary: Login a user
  *     tags: [Auth]
@@ -79,7 +79,7 @@ router.post('/login', authController.login);
 
 /**
  * @swagger
- * /api/auth/refresh:
+ * /auth/refresh:
  *   post:
  *     summary: Refresh access token
  *     description: Issues a new access token using a valid refresh token.
@@ -143,7 +143,7 @@ router.post('/refresh', authController.refreshTokens);
 
 /**
  * @swagger
- * /api/auth/logout:
+ * /auth/logout:
  *   post:
  *     summary: Logout user
  *     description: Clears the refresh token cookie and invalidates the session.

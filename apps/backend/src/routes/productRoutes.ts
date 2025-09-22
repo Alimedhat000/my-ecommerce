@@ -124,7 +124,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/products:
+ * /products:
  *   get:
  *     summary: Get all published products
  *     description: Retrieve a paginated list of published products with optional filtering
@@ -213,7 +213,7 @@ router.get('/', productController.getProducts);
 
 /**
  * @swagger
- * /api/products/{id}:
+ * /products/{id}:
  *   get:
  *     summary: Get product by ID
  *     description: Retrieve a single published product by its ID
@@ -249,7 +249,7 @@ router.get('/:id', productController.getProduct);
 
 /**
  * @swagger
- * /api/products/handle/{handle}:
+ * /products/handle/{handle}:
  *   get:
  *     summary: Get product by handle
  *     description: Retrieve a single published product by its SEO-friendly handle

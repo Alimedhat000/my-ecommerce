@@ -98,7 +98,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/admin/products:
+ * /admin/products:
  *   get:
  *     summary: Get all products (Admin)
  *     description: Retrieve all products including drafts and archived products
@@ -172,7 +172,7 @@ router.get('/products', productController.getAdminProducts);
 
 /**
  * @swagger
- * /api/admin/products/{id}:
+ * /admin/products/{id}:
  *   get:
  *     summary: Get product by ID (Admin)
  *     description: Retrieve any product regardless of status
@@ -212,7 +212,7 @@ router.get('/products/:id', productController.getAdminProduct);
 
 /**
  * @swagger
- * /api/admin/products:
+ * /admin/products:
  *   post:
  *     summary: Create new product
  *     description: Create a new product with variants, images, and collections
@@ -268,7 +268,7 @@ router.post('/products', productController.createProductEndpoint);
 
 /**
  * @swagger
- * /api/admin/products/{id}:
+ * /admin/products/{id}:
  *   put:
  *     summary: Update product
  *     description: Update an existing product with all its related data
@@ -317,7 +317,7 @@ router.put('/products/:id', productController.updateProductEndpoint);
 
 /**
  * @swagger
- * /api/admin/products/{id}:
+ * /admin/products/{id}:
  *   delete:
  *     summary: Delete product
  *     description: Permanently delete a product and all its related data
@@ -358,7 +358,7 @@ router.delete('/products/:id', productController.deleteProductEndpoint);
 
 /**
  * @swagger
- * /api/admin/products/{id}/status:
+ * /admin/products/{id}/status:
  *   patch:
  *     summary: Update product status
  *     description: Update the status of a product (DRAFT, ACTIVE, ARCHIVED)

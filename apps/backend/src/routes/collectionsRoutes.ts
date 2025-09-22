@@ -5,7 +5,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/collections/{id}/products:
+ * /collections/{id}/products:
  *   get:
  *     summary: Get products by collection
  *     description: Retrieve all published products in a specific collection
