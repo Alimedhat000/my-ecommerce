@@ -1,5 +1,7 @@
 import express from 'express';
 import * as productController from '../controllers/productController';
+import * as imageController from '../controllers/imageController';
+import { upload } from '../config/mutler';
 
 const router = express.Router();
 
@@ -427,5 +429,118 @@ router.delete('/products/:id', productController.deleteProductEndpoint);
  *         description: Server error
  */
 router.patch('/products/:id/status', productController.updateProductStatus);
+
+/**
+ * @swagger
+ * /admin/products/{id}/images:
+ *   post:
+ *     summary: Upload product image
+ *     description: Upload a product image to Cloudinary and associate it with the product
+ *     tags: [Admin - Images]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Product ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - image
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *                 description: Image file to upload
+ *               alt:
+ *                 type: string
+ *                 example: "Nike Air Max 90 in Red"
+ *               position:
+ *                 type: integer
+ *                 example: 1
+ *     responses:
+ *       201:
+ *         description: Image uploaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/ProductImage'
+ *                 cloudinaryData:
+ *                   type: object
+ *                   properties:
+ *                     publicId:
+ *                       type: string
+ *                     secureUrl:
+ *                       type: string
+ *                     width:
+ *                       type: integer
+ *                     height:
+ *                       type: integer
+ *                     format:
+ *                       type: string
+ *       400:
+ *         description: Validation error or missing image
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Product not found
+ *       500:
+ *         description: Server error
+ */
+router.post('/products/:id/images', upload.single('image'), imageController.uploadProductImage);
+
+/**
+ * @swagger
+ * /admin/images/{id}:
+ *   delete:
+ *     summary: Delete product image
+ *     description: Delete a product image from database and Cloudinary
+ *     tags: [Admin - Images]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Image ID
+ *     responses:
+ *       200:
+ *         description: Image deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Image deleted successfully"
+ *       400:
+ *         description: Invalid image ID
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Image not found
+ *       500:
+ *         description: Server error
+ */
+router.delete('/images/:id', imageController.deleteProductImage);
 
 export default router;
