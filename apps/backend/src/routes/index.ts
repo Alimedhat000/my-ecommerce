@@ -14,6 +14,6 @@ router.use('/products', productRoutes);
 
 router.use('/collections', collectionsRoutes);
 
-router.use('/admin' /*, authorizeAdmin*/, adminRoutes);
+router.use('/admin', authorizeAdmin, adminRoutes);
 
 export default router;
