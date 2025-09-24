@@ -27,7 +27,9 @@
   "description": "",
   "dependencies": {
     "@prisma/client": "^6.13.0",
+    "@types/multer": "^2.0.0",
     "bcrypt": "^5.1.1",
+    "cloudinary": "^2.7.0",
     "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -43,6 +45,7 @@
     "http-auth": "^4.2.1",
     "http-auth-connect": "^1.0.6",
     "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "winston": "^3.13.1",
