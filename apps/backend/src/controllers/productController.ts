@@ -10,6 +10,7 @@ import {
 } from '../services/productService';
 import { catchAsync } from '../utils/errorHandler';
 import logger from '../utils/logger';
+import { createImage, deleteImage, getImagesByProductId } from '../services/imageService';
 
 const ProductStatus = {
     DRAFT: 'DRAFT',
@@ -111,7 +112,7 @@ export const getProduct = catchAsync(async (req: Request, res: Response) => {
     try {
         const id = parseInt(req.params.id);
 
-        if (isNaN(id)) {
+        if (isNaN(id) || id <= 0) {
             return res.status(400).json({
                 success: false,
                 error: 'Invalid product ID',
@@ -199,7 +200,7 @@ export const getProductsByCollectionEndpoint = catchAsync(async (req: Request, r
         const collectionId = parseInt(req.params.id);
         const { page, limit } = req.query;
 
-        if (isNaN(collectionId)) {
+        if (isNaN(collectionId) || collectionId <= 0) {
             return res.status(400).json({
                 success: false,
                 error: 'Invalid collection ID',
@@ -231,6 +232,8 @@ export const getProductsByCollectionEndpoint = catchAsync(async (req: Request, r
     }
 });
 
+//! ---------- Admin Controllers ----------
+
 // GET /api/admin/products - Get all products (including drafts)
 export const getAdminProducts = catchAsync(async (req: Request, res: Response) => {
     try {
@@ -257,7 +260,7 @@ export const getAdminProduct = catchAsync(async (req: Request, res: Response) =>
     try {
         const id = parseInt(req.params.id);
 
-        if (isNaN(id)) {
+        if (isNaN(id) || id <= 0) {
             return res.status(400).json({
                 success: false,
                 error: 'Invalid product ID',
@@ -289,6 +292,7 @@ export const getAdminProduct = catchAsync(async (req: Request, res: Response) =>
 });
 
 // POST /api/admin/products - Create new product
+//? with optional images
 export const createProductEndpoint = catchAsync(async (req: Request, res: Response) => {
     try {
         const errors = validateProductData(req.body);
@@ -301,7 +305,28 @@ export const createProductEndpoint = catchAsync(async (req: Request, res: Respon
             });
         }
 
-        const product = await createProduct(req.body);
+        const { images, ...productData } = req.body;
+
+        const product = await createProduct(productData);
+
+        let createdImages = [];
+        if (images && Array.isArray(images) && images.length > 0) {
+            try {
+                for (const imageData of images) {
+                    const image = await createImage({
+                        productId: product.id,
+                        alt: imageData.alt || product.title,
+                        position: imageData.position || 0,
+                        imageBuffer: imageData.buffer,
+                        uploadOptions: { generateSizes: true },
+                    });
+                    createdImages.push(image);
+                }
+            } catch (imageError) {
+                logger.warn(`Failed to upload some images for product ${product.id}:`, imageError);
+                // Continue with product creation even if images fail
+            }
+        }
 
         res.status(201).json({
             success: true,
@@ -330,7 +355,7 @@ export const updateProductEndpoint = catchAsync(async (req: Request, res: Respon
     try {
         const id = parseInt(req.params.id);
 
-        if (isNaN(id)) {
+        if (isNaN(id) || id <= 0) {
             return res.status(400).json({
                 success: false,
                 error: 'Invalid product ID',
@@ -341,6 +366,7 @@ export const updateProductEndpoint = catchAsync(async (req: Request, res: Respon
         const errors = validateProductData(updateData);
 
         if (errors.length > 0) {
+            console.error('Validation errors:', errors);
             return res.status(400).json({
                 success: false,
                 error: 'Validation failed',
@@ -385,7 +411,7 @@ export const deleteProductEndpoint = catchAsync(async (req: Request, res: Respon
     try {
         const id = parseInt(req.params.id);
 
-        if (isNaN(id)) {
+        if (isNaN(id) || id <= 0) {
             return res.status(400).json({
                 success: false,
                 error: 'Invalid product ID',
@@ -422,7 +448,7 @@ export const updateProductStatus = catchAsync(async (req: Request, res: Response
         const id = parseInt(req.params.id);
         const { status } = req.body;
 
-        if (isNaN(id)) {
+        if (isNaN(id) || id <= 0) {
             return res.status(400).json({
                 success: false,
                 error: 'Invalid product ID',
@@ -463,6 +489,129 @@ export const updateProductStatus = catchAsync(async (req: Request, res: Response
         res.status(500).json({
             success: false,
             error: 'Failed to update product status',
+        });
+    }
+});
+
+// POST /api/admin/products/:id/images - Upload product image
+export const uploadProductImage = catchAsync(async (req: Request, res: Response) => {
+    try {
+        const productId = parseInt(req.params.id, 10);
+
+        if (isNaN(productId) || productId <= 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid product ID',
+            });
+        }
+
+        // Verify product exists
+        try {
+            await getProductById(productId);
+        } catch (error: any) {
+            if (error.message === 'Product not found') {
+                return res.status(404).json({
+                    success: false,
+                    error: 'Product not found',
+                });
+            }
+            throw error;
+        }
+
+        const { alt, position } = req.body;
+        const imageBuffer = req.file?.buffer;
+
+        if (!imageBuffer) {
+            return res.status(400).json({
+                success: false,
+                error: 'No image file provided',
+            });
+        }
+
+        const { image, cloudinaryData } = await createImage({
+            productId,
+            alt: alt || `Product ${productId} image`,
+            position: position ? parseInt(position) : 0,
+            imageBuffer,
+            uploadOptions: { generateSizes: true },
+        });
+
+        res.status(201).json({
+            success: true,
+            data: { image, cloudinaryData },
+            message: 'Image uploaded successfully',
+        });
+    } catch (error: any) {
+        logger.error('Error uploading image:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Failed to upload image',
+        });
+    }
+});
+
+// GET /api/admin/products/:id/images - Get all images for a product
+export const getProductImages = catchAsync(async (req: Request, res: Response) => {
+    try {
+        const productId = parseInt(req.params.id, 10);
+
+        if (isNaN(productId) || productId <= 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid product ID',
+            });
+        }
+
+        const images = await getImagesByProductId(productId);
+
+        res.json({
+            success: true,
+            data: images,
+            meta: {
+                productId,
+                count: images.length,
+            },
+        });
+    } catch (error: any) {
+        logger.error('Error fetching product images:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Failed to fetch images',
+        });
+    }
+});
+
+// DELETE /api/admin/products/:productId/images/:imageId - Delete product image
+export const deleteProductImage = catchAsync(async (req: Request, res: Response) => {
+    try {
+        const productId = parseInt(req.params.productId, 10);
+        const imageId = parseInt(req.params.imageId, 10);
+
+        if (isNaN(productId) || isNaN(imageId) || productId <= 0 || imageId <= 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid product ID or image ID',
+            });
+        }
+
+        const result = await deleteImage(imageId);
+
+        res.json({
+            success: true,
+            message: result.message || 'Image deleted successfully',
+        });
+    } catch (error: any) {
+        if (error.message === 'Image not found') {
+            return res.status(404).json({
+                success: false,
+                error: 'Image not found',
+            });
+        }
+
+        logger.error('Error deleting image:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Failed to delete image',
         });
     }
 });

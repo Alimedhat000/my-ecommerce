@@ -280,3 +280,16 @@ export async function deleteImage(id: number) {
         throw error;
     }
 }
+
+export async function getImagesByProductId(productId: number) {
+    const images = await prisma.productImage.findMany({
+        where: { productId },
+        include: {
+            variants: true,
+        },
+        orderBy: {
+            position: 'asc',
+        },
+    });
+    return images;
+}

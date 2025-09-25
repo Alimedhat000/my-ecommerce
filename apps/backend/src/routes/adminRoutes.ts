@@ -1,6 +1,5 @@
 import express from 'express';
 import * as productController from '../controllers/productController';
-import * as imageController from '../controllers/imageController';
 import { upload } from '../config/mutler';
 
 const router = express.Router();
@@ -270,6 +269,76 @@ router.post('/products', productController.createProductEndpoint);
 
 /**
  * @swagger
+ * /api/admin/products/{id}/images:
+ *   get:
+ *     summary: Get all images for a product
+ *     description: Retrieve all images belonging to a specific product, ordered by position.
+ *     tags:
+ *       - Products
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Product ID
+ *     responses:
+ *       200:
+ *         description: Successfully fetched product images
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/ProductImage'
+ *                 meta:
+ *                   type: object
+ *                   properties:
+ *                     productId:
+ *                       type: integer
+ *                       example: 42
+ *                     count:
+ *                       type: integer
+ *                       example: 3
+ *       400:
+ *         description: Invalid product ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: Invalid product ID
+ *       500:
+ *         description: Server error while fetching product images
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: Failed to fetch images
+ */
+router.get('/products/:id/images', productController.getProductImages);
+
+/**
+ * @swagger
  * /admin/products/{id}:
  *   put:
  *     summary: Update product
@@ -500,7 +569,7 @@ router.patch('/products/:id/status', productController.updateProductStatus);
  *       500:
  *         description: Server error
  */
-router.post('/products/:id/images', upload.single('image'), imageController.uploadProductImage);
+router.post('/products/:id/images', upload.single('image'), productController.uploadProductImage);
 
 /**
  * @swagger
@@ -541,6 +610,6 @@ router.post('/products/:id/images', upload.single('image'), imageController.uplo
  *       500:
  *         description: Server error
  */
-router.delete('/images/:id', imageController.deleteProductImage);
+router.delete('/products/:productId/images/:imageId', productController.deleteProductImage);
 
 export default router;
