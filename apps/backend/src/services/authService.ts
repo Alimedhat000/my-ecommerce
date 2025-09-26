@@ -113,7 +113,6 @@ export const register = async (email: string, password: string, name?: string) =
             user,
         };
     } catch (err: unknown) {
-        console.log(err instanceof Prisma.PrismaClientKnownRequestError);
         if (
             err instanceof Prisma.PrismaClientKnownRequestError &&
             err.code === 'P2002' &&

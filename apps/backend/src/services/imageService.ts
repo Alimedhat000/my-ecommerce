@@ -161,7 +161,7 @@ export async function createImage(data: CreateImageData) {
                 ...imageData,
                 position,
                 alt: imageData.alt || `Image for product ${imageData.productId}`,
-                src: processedImageData?.secureUrl || imageData.src || '', // it won't be empty if imageBuffer is provided
+                src: processedImageData?.secureUrl ?? imageData.src!,
                 width: processedImageData?.width || imageData.width,
                 height: processedImageData?.height || imageData.height,
             },
