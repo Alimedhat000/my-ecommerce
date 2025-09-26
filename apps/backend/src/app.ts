@@ -179,7 +179,7 @@ app.use((err: AppError, req: Request, res: Response, _next: NextFunction) => {
 });
 
 // ---------- Start Server ----------
-app.listen(PORT, () => {
+app.listen(process.env.TEST_PORT || PORT, () => {
     logger.info(`Server is running on port ${PORT}`);
     if (NODE_ENV === 'development') {
         logger.info(`Swagger docs: http://localhost:${PORT}/api-docs`);

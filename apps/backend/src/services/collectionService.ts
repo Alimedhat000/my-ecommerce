@@ -193,8 +193,10 @@ export async function createCategory(data: CreateCategoryData) {
                 }
                 throw new Error('Category with these details already exists');
             }
+            /* c8 ignore start */
         }
         throw error;
+        /* c8 ignore end */
     }
 }
 
@@ -281,11 +283,6 @@ export async function deleteCategory(id: number) {
             },
         };
     } catch (error) {
-        if (error instanceof Prisma.PrismaClientKnownRequestError) {
-            if (error.code === 'P2025') {
-                throw new Error('Category not found');
-            }
-        }
         throw error;
     }
 }

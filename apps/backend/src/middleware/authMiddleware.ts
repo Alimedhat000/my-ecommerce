@@ -23,12 +23,14 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
         return next(new AppError('Access token is required', 401));
     }
 
-    const token = authHeader.replace('Bearer ', '');
+    const parts = authHeader.split(' ');
 
-    if (!token) {
-        logger.warn('No token provided in Authorization header');
+    if (parts.length !== 2 || parts[0] !== 'Bearer' || !parts[1].trim()) {
+        logger.warn('Invalid or missing token in Authorization header');
         return next(new AppError('Access token is required', 401));
     }
+
+    const token = parts[1].trim();
 
     try {
         const decoded = authService.verifyAccessToken(token);

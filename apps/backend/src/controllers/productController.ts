@@ -156,7 +156,7 @@ export const getProductByHandleEndpoint = catchAsync(async (req: Request, res: R
     try {
         const { handle } = req.params;
 
-        if (!handle) {
+        if (!handle || handle.trim() === '') {
             return res.status(400).json({
                 success: false,
                 error: 'Product handle is required',

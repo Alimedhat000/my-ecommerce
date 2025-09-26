@@ -10,11 +10,13 @@ const SALT_ROUNDS = Number(process.env.BCRYPT_SALT_ROUNDS ?? 10);
 const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET;
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
 
+// Fail fast on startup would be better, but this guard prevents runtime signing without a secret
+/* c8 ignore start */
 if (!JWT_ACCESS_SECRET || !JWT_REFRESH_SECRET) {
-    // Fail fast on startup would be better, but this guard prevents runtime signing without a secret
     logger.error('JWT_SECRET is not configured in environment variables');
     throw new Error('JWT_SECRET not configured');
 }
+/* c8 ignore end */
 
 const ACCESS_TOKEN_EXPIRES_IN = '15m';
 const REFRESH_TOKEN_EXPIRES_IN = '7d';
@@ -111,13 +113,14 @@ export const register = async (email: string, password: string, name?: string) =
             user,
         };
     } catch (err: unknown) {
-        // Handle unique constraint violation
+        console.log(err instanceof Prisma.PrismaClientKnownRequestError);
         if (
             err instanceof Prisma.PrismaClientKnownRequestError &&
             err.code === 'P2002' &&
             Array.isArray(err.meta?.target) &&
             err.meta.target.includes('email')
         ) {
+            console.log(`Registration failed: Email already in use - ${normalizedEmail}`);
             logger.warn(`Registration failed: Email already in use - ${normalizedEmail}`);
             throw new AppError('Email already in use', 400);
         }

@@ -5,3 +5,5 @@ node_modules
 logs
 # Ignore database files
 prisma/data/*.json
+
+coverage
