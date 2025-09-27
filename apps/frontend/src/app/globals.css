@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -50,29 +50,49 @@
 
 :root {
   /* TYPOGRAPHY */
-  --font-heading: "Oswald", sans-serif;
-  --font-body: "Roboto Condensed", sans-serif;
-  --font-mono: "Fira Code", "Consolas", monospace;
+  --font-heading: 'Oswald', sans-serif;
+  --heading-letter-spacing: 0.01em;
+  --heading-text-transform: uppercase;
+  --font-body: 'Roboto Condensed', sans-serif;
+  --font-mono: 'Fira Code', 'Consolas', monospace;
+  --body-letter-spacing: 0.02em;
 
   --radius: 0.625rem;
+
   --background: oklch(1 0 0);
   --foreground: oklch(0.13 0.028 261.692);
+  --primary: oklch(0.21 0.034 264.665);
+  --primary-foreground: oklch(0.985 0.002 247.839);
+
+  --secondary: oklch(0.967 0.003 264.542);
+  --secondary-foreground: oklch(0.21 0.034 264.665);
+
+  --accent: oklch(0.967 0.003 264.542);
+  --accent-foreground: oklch(0.21 0.034 264.665);
+
+  --muted: oklch(0.967 0.003 264.542);
+  --muted-foreground: oklch(0.551 0.027 264.364);
+
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.13 0.028 261.692);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.13 0.028 261.692);
-  --primary: oklch(0.21 0.034 264.665);
-  --primary-foreground: oklch(0.985 0.002 247.839);
-  --secondary: oklch(0.967 0.003 264.542);
-  --secondary-foreground: oklch(0.21 0.034 264.665);
-  --muted: oklch(0.967 0.003 264.542);
-  --muted-foreground: oklch(0.551 0.027 264.364);
-  --accent: oklch(0.967 0.003 264.542);
-  --accent-foreground: oklch(0.21 0.034 264.665);
-  --destructive: oklch(0.577 0.245 27.325);
+
   --border: oklch(0.928 0.006 264.531);
   --input: oklch(0.928 0.006 264.531);
   --ring: oklch(0.707 0.022 261.325);
+
+  --brand-orange: rgb(255, 79, 44); /* Orange accent */
+  --brand-yellow: rgb(241, 189, 62); /* Yellow accent */
+
+  --success: rgb(0, 163, 65);
+  --success-bg: rgb(224, 244, 232);
+  --warning: rgb(255, 183, 74);
+  --warning-bg: rgb(255, 246, 233);
+  --error: rgb(255, 79, 44);
+  --error-bg: rgb(255, 234, 230);
+  --destructive: oklch(0.577 0.245 27.325);
+
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -120,6 +140,13 @@
   --sidebar-accent-foreground: oklch(0.985 0.002 247.839);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.551 0.027 264.364);
+}
+
+.header {
+  font-weight: 600;
+  font-family: var(--font-heading);
+  letter-spacing: var(--heading-letter-spacing);
+  text-transform: var(--heading-text-transform);
 }
 
 @layer base {

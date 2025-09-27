@@ -1,3 +1,4 @@
+import Header from "@/components/layout/header";
 import "./globals.css";
 import localFont from "next/font/local";
 
@@ -29,6 +30,7 @@ export default function RootLayout({
       <body
         className={`${oswald.variable} ${robotoCondensed.variable} ${firaCode.variable} antialiased`}
       >
+        <Header />
         {children}
       </body>
     </html>
