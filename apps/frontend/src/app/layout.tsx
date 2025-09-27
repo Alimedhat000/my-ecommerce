@@ -1,14 +1,22 @@
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import localFont from "next/font/local";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const oswald = localFont({
+  src: "../../public/fonts/Oswald-VariableFont_wght.ttf",
+  variable: "--font-heading",
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const robotoCondensed = localFont({
+  src: "../../public/fonts/RobotoCondensed-VariableFont_wght.ttf",
+  variable: "--font-body",
+  display: "swap",
+});
+
+const firaCode = localFont({
+  src: "../../public/fonts/FiraCode-VariableFont_wght.ttf",
+  variable: "--font-mono",
+  display: "swap",
 });
 
 export default function RootLayout({
@@ -19,7 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${oswald.variable} ${robotoCondensed.variable} ${firaCode.variable} antialiased`}
       >
         {children}
       </body>
