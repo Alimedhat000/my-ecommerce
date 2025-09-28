@@ -1,22 +1,22 @@
-import Header from '@/components/layout/header';
 import './globals.css';
 import localFont from 'next/font/local';
 import Footer from '@/components/layout/footer';
+import HeaderWrapper from '@/components/layout/headerWrapper';
 
 const oswald = localFont({
-  src: '../../public/fonts/Oswald-VariableFont_wght.ttf',
+  src: '../fonts/Oswald-VariableFont_wght.ttf',
   variable: '--font-heading',
   display: 'swap',
 });
 
 const robotoCondensed = localFont({
-  src: '../../public/fonts/RobotoCondensed-VariableFont_wght.ttf',
+  src: '../fonts/RobotoCondensed-VariableFont_wght.ttf',
   variable: '--font-body',
   display: 'swap',
 });
 
 const firaCode = localFont({
-  src: '../../public/fonts/FiraCode-VariableFont_wght.ttf',
+  src: '../fonts/FiraCode-VariableFont_wght.ttf',
   variable: '--font-mono',
   display: 'swap',
 });
@@ -29,9 +29,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${oswald.variable} ${robotoCondensed.variable} ${firaCode.variable} antialiased`}
+        className={`${oswald.variable} ${robotoCondensed.variable} ${firaCode.variable} bg-muted antialiased`}
       >
-        <Header />
+        <HeaderWrapper />
         {children}
         <Footer />
       </body>

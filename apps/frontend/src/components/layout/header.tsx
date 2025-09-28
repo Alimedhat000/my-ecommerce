@@ -2,10 +2,12 @@ import Image from 'next/image';
 import { ChevronDown, Search, ShoppingBag, User } from 'lucide-react';
 import React from 'react';
 
-export default function Header() {
+export default function Header({ isHome }: { isHome: boolean }) {
   return (
     <header>
-      <div className="border-t-foreground border-b-foreground header grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center border-t border-b px-12 py-9 text-center">
+      <div
+        className={`bg-background text-foreground border-t-foreground border-b-foreground header grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center border-b px-12 py-9 text-center ${isHome ? 'border-t' : 'dark'}`}
+      >
         {/* Left Nav */}
         <div className="flex items-center justify-start">
           <nav>
@@ -34,13 +36,23 @@ export default function Header() {
 
         {/* Logo */}
         <div className="flex justify-center">
-          <Image
-            src="/logo.svg"
-            alt="Site Logo"
-            width={100}
-            height={30}
-            priority
-          />
+          {isHome ? (
+            <Image
+              src="/logo.svg"
+              alt="Site Logo"
+              width={100}
+              height={30}
+              priority
+            />
+          ) : (
+            <Image
+              src="/logo_dark.svg"
+              alt="Site Logo"
+              width={100}
+              height={30}
+              priority
+            />
+          )}
         </div>
 
         {/* Right Icons */}

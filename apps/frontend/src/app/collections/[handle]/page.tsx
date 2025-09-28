@@ -1,17 +1,50 @@
-import { Settings2 } from 'lucide-react';
+import { Settings2, X } from 'lucide-react';
 import React from 'react';
+import ProductCard from './_components/productCard';
+import { Metadata } from 'next';
+import Filters from './_components/filters';
 
-type ProductPageProps = {
+type CollectionPageProps = {
   params: { handle: string };
 };
 
-export default async function ProductPage({
-  params: { handle },
-}: ProductPageProps) {
+function formatHandle(handle: string): string {
+  const specialCases: Record<string, string> = {
+    mens: "Men's",
+    womens: "Women's",
+    kids: "Kids'",
+  };
+
+  return handle
+    .split('-')
+    .map((word) => {
+      const lower = word.toLowerCase();
+      if (specialCases[lower]) return specialCases[lower];
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(' ');
+}
+
+export async function generateMetadata({
+  params,
+}: CollectionPageProps): Promise<Metadata> {
+  const handle = formatHandle(params.handle);
+
+  return {
+    title: `${handle}`,
+    description: `Discover our ${handle} collection. Shop the latest styles and trends now on My Store.`,
+  };
+}
+
+export default async function CollectionPage({ params }: CollectionPageProps) {
+  const handle = formatHandle(params.handle);
+
   return (
     <main className="mb-20">
-      <div className="my-10">
-        <h1 className="text-center text-4xl font-bold uppercase">{handle}</h1>
+      <div className="my-15">
+        <h1 className="text-center text-4xl font-medium tracking-tight uppercase">
+          {handle}
+        </h1>
       </div>
       {/* Main Product grid */}
       <section className="mx-12" aria-label="Product Listings">
@@ -23,6 +56,32 @@ export default async function ProductPage({
               <span>Filters</span>
             </div>
             <div className="flex items-center">
+              {/* Active Filters */}
+              <div className="flex flex-wrap gap-2">
+                {/* Availability */}
+                <div className="text-muted-foreground border-ring flex items-center gap-2 rounded-full border px-3 py-1 text-sm">
+                  <span>Availability: In stock</span>
+                  <button
+                    className="rounded-full p-1 hover:bg-gray-200 focus:ring-2 focus:ring-gray-400 focus:ring-offset-1 focus:outline-none"
+                    aria-label="Remove filter Availability: In stock"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+
+                {/* Brand */}
+                <div className="text-muted-foreground border-ring flex items-center gap-2 rounded-full border px-3 py-1 text-sm">
+                  <span>Brand: Test Brand</span>
+                  <button
+                    className="rounded-full p-1 hover:bg-gray-200 focus:ring-2 focus:ring-gray-400 focus:ring-offset-1 focus:outline-none"
+                    aria-label="Remove filter Brand: Test Brand"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Sort By */}
               <div className="ml-auto flex items-center justify-end gap-2">
                 <label htmlFor="sort" className="font-bold">
                   Sort by
@@ -42,27 +101,22 @@ export default async function ProductPage({
           </div>
 
           {/* Filters */}
-          <aside aria-label="Filters" className="space-y-4">
-            <h2 className="text-lg font-semibold">Filters</h2>
-            <div>Faceted filter options here</div>
-          </aside>
+          <Filters />
 
           {/* Results */}
           <section aria-label="Products" className="grid gap-6">
             <h2 className="sr-only">Product Results</h2>
-            <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="grid [grid-auto-flow:dense] grid-cols-[repeat(2,auto)] gap-6 lg:grid-cols-[repeat(3,minmax(0,1fr))]">
               {/* Example product card placeholder */}
-              {Array.from({ length: 10 }).map((_, index) => (
-                <div key={index} className="rounded border p-4">
-                  Product Card
-                </div>
+              {Array.from({ length: 12 }).map((_, index) => (
+                <ProductCard key={index} long={index % 2 == 0} />
               ))}
             </div>
           </section>
           {/* pagination */}
           <nav
             aria-label="Pagination"
-            className="-col-end-1 mt-8 box-border flex w-auto justify-center justify-self-center rounded-4xl border"
+            className="border-ring -col-end-1 mt-8 box-border flex w-auto justify-center justify-self-center rounded-4xl border"
           >
             <span className="group inline-flex items-center px-5">
               <div className="animated-arrow animated-arrow--reverse animated-arrow--disabled"></div>
