@@ -149,11 +149,75 @@
   text-transform: var(--heading-text-transform);
 }
 
+main {
+  font-family: var(--font-body);
+  letter-spacing: var(--body-letter-spacing);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-body;
   }
+}
+
+.animated-arrow {
+  pointer-events: none;
+  place-items: center;
+  display: grid;
+  --dir: 0; /* set direction, flip with .animated-arrow--reverse */
+}
+
+/* Arrow head */
+.animated-arrow::before,
+.animated-arrow::after {
+  content: '';
+  grid-area: 1 / -1;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Diagonal arrow head */
+.animated-arrow::before {
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  width: 0.5rem;
+  height: 0.5rem;
+  transform: rotate(calc(45deg + calc(var(--dir) * 180deg)));
+  position: relative;
+  left: -1px;
+}
+
+/* Horizontal line */
+.animated-arrow::after {
+  width: 0.625rem;
+  height: 0.125rem;
+  transform-origin: center;
+  opacity: 0;
+  background: currentColor;
+  transform: scaleX(0.5);
+}
+
+/* Hover effect (only on devices with a fine pointer) */
+@media (pointer: fine) {
+  .group:hover .animated-arrow:not(.animated-arrow--disabled)::before {
+    transform: translateX(calc(0.125rem + var(--dir) * 0.25rem))
+      rotate(calc(45deg + calc(var(--dir) * 180deg)));
+  }
+  .group:hover .animated-arrow:not(.animated-arrow--disabled)::after {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+/* Flip arrow backwards */
+.animated-arrow--reverse {
+  --dir: -1;
+}
+
+/* Disabled state */
+.animated-arrow--disabled {
+  pointer-events: none;
+  opacity: 0.5; /* optional: dim the arrow */
 }

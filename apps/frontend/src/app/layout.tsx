@@ -1,23 +1,24 @@
-import Header from "@/components/layout/header";
-import "./globals.css";
-import localFont from "next/font/local";
+import Header from '@/components/layout/header';
+import './globals.css';
+import localFont from 'next/font/local';
+import Footer from '@/components/layout/footer';
 
 const oswald = localFont({
-  src: "../../public/fonts/Oswald-VariableFont_wght.ttf",
-  variable: "--font-heading",
-  display: "swap",
+  src: '../../public/fonts/Oswald-VariableFont_wght.ttf',
+  variable: '--font-heading',
+  display: 'swap',
 });
 
 const robotoCondensed = localFont({
-  src: "../../public/fonts/RobotoCondensed-VariableFont_wght.ttf",
-  variable: "--font-body",
-  display: "swap",
+  src: '../../public/fonts/RobotoCondensed-VariableFont_wght.ttf',
+  variable: '--font-body',
+  display: 'swap',
 });
 
 const firaCode = localFont({
-  src: "../../public/fonts/FiraCode-VariableFont_wght.ttf",
-  variable: "--font-mono",
-  display: "swap",
+  src: '../../public/fonts/FiraCode-VariableFont_wght.ttf',
+  variable: '--font-mono',
+  display: 'swap',
 });
 
 export default function RootLayout({
@@ -32,6 +33,7 @@ export default function RootLayout({
       >
         <Header />
         {children}
+        <Footer />
       </body>
     </html>
   );
