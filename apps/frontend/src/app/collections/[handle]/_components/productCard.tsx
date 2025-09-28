@@ -1,28 +1,39 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import React from 'react';
+import { Product } from '@/types/collection';
+import ProductBadge from './productBadge';
+import VariantSwatches from './variantSwatches';
 
-export default function ProductCard({ long }: { long: boolean }) {
+interface ProductCardProps {
+  product: Product;
+}
+
+export default function ProductCard({ product }: ProductCardProps) {
+  const primaryImage = product.images[0];
+  const primaryCollection = product.collections[0];
+  const hasDiscount =
+    product.compareAtPrice && product.compareAtPrice > product.price;
+
   return (
     <article className="bg-background relative grid grid-rows-[auto_1fr_auto] overflow-hidden rounded-md">
       {/* Badges */}
-      <div className="absolute top-3 left-3 z-10 flex space-x-2">
-        <span className="bg-destructive rounded-full px-2 py-1 text-xs font-semibold text-white">
-          Save 25%
-        </span>
-        <span className="bg-brand-orange rounded-full px-2 py-1 text-xs font-semibold text-white">
-          Unisex
-        </span>
-      </div>
+      {product.badges && product.badges.length > 0 && (
+        <div className="absolute top-3 left-3 z-10 flex space-x-2">
+          {product.badges.map((badge, index) => (
+            <ProductBadge key={index} badge={badge} />
+          ))}
+        </div>
+      )}
 
       {/* Product Image + Quick Add */}
       <div className="group relative">
-        <Link href="/products/test-nav">
+        <Link href={`/products/${product.handle}`}>
           <Image
-            src="/placeholder.webp"
-            alt="Oversized R1 T-Shirt"
-            width={400}
-            height={500}
+            src={primaryImage.src}
+            alt={primaryImage.alt}
+            width={primaryImage.width}
+            height={primaryImage.height}
             className="w-full object-cover"
           />
         </Link>
@@ -35,38 +46,36 @@ export default function ProductCard({ long }: { long: boolean }) {
       {/* Info Section */}
       <div className="grid grid-rows-[auto_1fr_auto] space-y-3 p-4">
         {/* Collection Handle */}
-        <Link
-          href="/collections/test-collection"
-          className="text-sm text-gray-500"
-        >
-          Juvenile
-        </Link>
+        {primaryCollection && (
+          <Link
+            href={`/collections/${primaryCollection.handle}`}
+            className="text-sm text-gray-500"
+          >
+            {primaryCollection.title}
+          </Link>
+        )}
 
         {/* Title & Pricing */}
         <div>
           <h3 className="font-semibold">
-            <Link href="/products/test-nav">
-              {!long
-                ? 'Oversized R1 T-Shirt'
-                : 'Oversizedddddddddd R1 T-Shirt  T-Shirt T-Shirt T-Shirt T-Shirt'}
-            </Link>
+            <Link href={`/products/${product.handle}`}>{product.title}</Link>
           </h3>
           <div className="flex items-center space-x-2">
-            <span className="font-bold text-red-600">525.00 EGP</span>
-            <span className="text-gray-400 line-through">700.00 EGP</span>
+            <span
+              className={hasDiscount ? 'font-bold text-red-600' : 'font-bold'}
+            >
+              {product.price.toFixed(2)} {product.currency}
+            </span>
+            {hasDiscount && (
+              <span className="text-gray-400 line-through">
+                {product.compareAtPrice!.toFixed(2)} {product.currency}
+              </span>
+            )}
           </div>
         </div>
 
         {/* Variant Swatches */}
-        <div className="flex items-center space-x-2">
-          <span className="selected_color h-5 w-5 rounded-full border bg-white"></span>
-          <span className="h-5 w-5 rounded-full bg-[#888]"></span>
-          <span className="h-5 w-5 rounded-full border bg-[#ead8ab]"></span>
-          <span className="unavailable_color h-5 w-5 rounded-full border bg-black"></span>
-          <span className="text-muted-foreground flex h-6 w-6 items-center justify-center rounded-full border text-xs">
-            +2
-          </span>
-        </div>
+        <VariantSwatches variants={product.variants} />
       </div>
     </article>
   );

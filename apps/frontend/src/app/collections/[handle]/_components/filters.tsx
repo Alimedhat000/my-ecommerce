@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 
 export default function Filters() {
   return (
-    <aside aria-label="Filters" className="space-y-6">
+    <aside aria-label="Filters" className="hidden h-full space-y-6 md:block">
       <div className="sticky -top-[20px] h-fit">
         <h2 className="text-lg font-semibold">Filters</h2>
 

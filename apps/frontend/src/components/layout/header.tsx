@@ -24,12 +24,12 @@ export default function Header({ isHome }: { isHome: boolean }) {
                   <ChevronDown className="h-4 w-4 transition-transform group-hover:rotate-180" />
                 </div>
               </li>
-              <li className="group cursor-pointer">
+              {/* <li className="group cursor-pointer">
                 <div className="hover:text-foreground/70 flex items-center gap-1 transition-colors">
                   Shop by Collections{' '}
                   <ChevronDown className="h-4 w-4 transition-transform group-hover:rotate-180" />
                 </div>
-              </li>
+              </li> */}
             </ul>
           </nav>
         </div>
