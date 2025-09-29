@@ -8,7 +8,7 @@ const router = express.Router();
  * /collections/{id}/products:
  *   get:
  *     summary: Get products by collection
- *     description: Retrieve all published products in a specific collection
+ *     description: Retrieve all published products in a specific collection, with pagination, filters, and sorting
  *     tags: [Collections]
  *     parameters:
  *       - in: path
@@ -32,6 +32,55 @@ const router = express.Router();
  *           maximum: 100
  *           default: 20
  *         description: Number of products per page
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           enum: [title, createdAt, updatedAt, publishedAt]
+ *           default: createdAt
+ *         description: Field to sort by
+ *       - in: query
+ *         name: sortOrder
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
+ *         description: Sort order
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [ACTIVE, INACTIVE, DRAFT]
+ *         description: Filter by product status
+ *       - in: query
+ *         name: vendor
+ *         schema:
+ *           type: string
+ *         description: Filter by vendor
+ *       - in: query
+ *         name: tags
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *         style: form
+ *         explode: false
+ *         description: Filter by tags (comma separated or repeated query param)
+ *       - in: query
+ *         name: minPrice
+ *         schema:
+ *           type: number
+ *         description: Minimum price filter
+ *       - in: query
+ *         name: maxPrice
+ *         schema:
+ *           type: number
+ *         description: Maximum price filter
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search query (matches title or description)
  *     responses:
  *       200:
  *         description: Products retrieved successfully
@@ -56,6 +105,15 @@ const router = express.Router();
  *                     productsCount:
  *                       type: integer
  *                       example: 15
+ *                     totalCount:
+ *                       type: integer
+ *                       example: 150
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 10
+ *                     currentPage:
+ *                       type: integer
+ *                       example: 2
  *       400:
  *         description: Invalid collection ID
  *       500:
@@ -68,7 +126,7 @@ router.get('/:id/products', productController.getProductsByCollectionEndpoint);
  * /collections/handle/{handle}/products:
  *   get:
  *     summary: Get products by collection handle
- *     description: Retrieve all published products in a specific collection by its handle
+ *     description: Retrieve all published products in a specific collection by its handle with pagination support
  *     tags: [Collections]
  *     parameters:
  *       - in: path
@@ -83,7 +141,7 @@ router.get('/:id/products', productController.getProductsByCollectionEndpoint);
  *           type: integer
  *           minimum: 1
  *           default: 1
- *         description: Page number
+ *         description: Page number for pagination
  *       - in: query
  *         name: limit
  *         schema:
@@ -91,7 +149,7 @@ router.get('/:id/products', productController.getProductsByCollectionEndpoint);
  *           minimum: 1
  *           maximum: 100
  *           default: 20
- *         description: Number of products per page
+ *         description: Number of products to return per page
  *     responses:
  *       200:
  *         description: Products retrieved successfully
@@ -119,6 +177,12 @@ router.get('/:id/products', productController.getProductsByCollectionEndpoint);
  *                     productsCount:
  *                       type: integer
  *                       example: 15
+ *                     currentPage:
+ *                       type: integer
+ *                       example: 1
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 2
  *       400:
  *         description: Invalid collection handle
  *       404:
@@ -126,6 +190,7 @@ router.get('/:id/products', productController.getProductsByCollectionEndpoint);
  *       500:
  *         description: Server error
  */
+
 router.get('/handle/:handle/products', productController.getProductsByCollectionHandleEndpoint);
 
 export default router;

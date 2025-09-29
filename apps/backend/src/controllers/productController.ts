@@ -12,12 +12,9 @@ import { catchAsync } from '../utils/errorHandler';
 import logger from '../utils/logger';
 import { createImage, deleteImage, getImagesByProductId } from '../services/imageService';
 import { getCategoryByHandle } from '../services/collectionService';
+import { PaginationOptions, ProductFilters } from '../types/productTypes';
+import { ProductStatus } from '@prisma/client';
 
-const ProductStatus = {
-    DRAFT: 'DRAFT',
-    ACTIVE: 'ACTIVE',
-    ARCHIVED: 'ARCHIVED',
-};
 const parseQueryParams = (query: any) => {
     const filters: any = {};
     const pagination: any = {};
@@ -199,21 +196,46 @@ export const getProductByHandleEndpoint = catchAsync(async (req: Request, res: R
 export const getProductsByCollectionEndpoint = catchAsync(async (req: Request, res: Response) => {
     try {
         const collectionId = parseInt(req.params.id);
-        const { page, limit } = req.query;
+        const { page, limit, sortBy, sortOrder, vendor, status, search, minPrice, maxPrice, tags } =
+            req.query;
 
         if (isNaN(collectionId) || collectionId <= 0) {
-            return res.status(400).json({
-                success: false,
-                error: 'Invalid collection ID',
-            });
+            return res.status(400).json({ success: false, error: 'Invalid collection ID' });
         }
 
-        const pagination = {
+        const pagination: PaginationOptions = {
             page: page ? Math.max(1, parseInt(page as string)) : 1,
             limit: limit ? Math.min(100, Math.max(1, parseInt(limit as string))) : 20,
+            sortBy: (sortBy as PaginationOptions['sortBy']) ?? 'createdAt',
+            sortOrder: (sortOrder as PaginationOptions['sortOrder']) ?? 'desc',
         };
 
-        const { products, totalCount } = await getProductsByCollection(collectionId, pagination);
+        let parsedTags: string[] | undefined = undefined;
+
+        if (tags) {
+            if (Array.isArray(tags)) {
+                parsedTags = tags.map(String); // force all to string
+            } else if (typeof tags === 'string') {
+                parsedTags = tags.split(',').map((t) => t.trim());
+            }
+        }
+
+        const filters: ProductFilters = {
+            status: status as ProductStatus,
+            vendor: vendor as string,
+            search: search as string,
+            tags: parsedTags,
+            priceRange: {
+                min: minPrice ? parseFloat(minPrice as string) : undefined,
+                max: maxPrice ? parseFloat(maxPrice as string) : undefined,
+            },
+        };
+
+        const { products, totalCount } = await getProductsByCollection(
+            collectionId,
+            pagination,
+            filters
+        );
 
         res.json({
             success: true,
@@ -222,16 +244,13 @@ export const getProductsByCollectionEndpoint = catchAsync(async (req: Request, r
                 collectionId,
                 productsCount: products.length,
                 totalCount,
-                totalPages: Math.ceil(totalCount / pagination.limit),
+                totalPages: Math.ceil(totalCount / pagination.limit! || 20),
                 currentPage: pagination.page,
             },
         });
     } catch (error) {
         console.error('Error fetching products by collection:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to fetch products',
-        });
+        res.status(500).json({ success: false, error: 'Failed to fetch products' });
         throw error;
     }
 });

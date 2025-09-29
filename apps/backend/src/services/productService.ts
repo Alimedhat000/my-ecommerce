@@ -184,36 +184,59 @@ export async function getProductByHandle(handle: string) {
 
 export async function getProductsByCollection(
     collectionId: number,
-    pagination: PaginationOptions = {}
+    pagination: PaginationOptions = {},
+    filters: ProductFilters = {}
 ) {
-    const { page = 1, limit = 20 } = pagination;
+    const { page = 1, limit = 20, sortBy = 'createdAt', sortOrder = 'desc' } = pagination;
     const skip = (page - 1) * limit;
 
-    const where = {
+    const where: any = {
         collections: {
             some: {
                 collectionId,
             },
         },
-        status: ProductStatus.ACTIVE,
+        status: filters.status ?? ProductStatus.ACTIVE,
     };
+
+    if (filters.vendor) {
+        where.vendor = filters.vendor;
+    }
+
+    if (filters.tags && filters.tags.length > 0) {
+        where.tags = {
+            hasSome: filters.tags, // Prisma array operator
+        };
+    }
+
+    if (filters.priceRange) {
+        where.variants = {
+            some: {
+                price: {
+                    gte: filters.priceRange.min ?? undefined,
+                    lte: filters.priceRange.max ?? undefined,
+                },
+            },
+        };
+    }
+
+    if (filters.search) {
+        where.OR = [
+            { title: { contains: filters.search, mode: 'insensitive' } },
+            { description: { contains: filters.search, mode: 'insensitive' } },
+        ];
+    }
 
     const [products, totalCount] = await Promise.all([
         prisma.product.findMany({
             where,
             include: {
-                variants: {
-                    orderBy: { position: 'asc' },
-                },
-                images: {
-                    orderBy: { position: 'asc' },
-                },
+                variants: { orderBy: { position: 'asc' } },
+                images: { orderBy: { position: 'asc' } },
             },
             skip,
             take: limit,
-            orderBy: {
-                createdAt: 'desc',
-            },
+            orderBy: { [sortBy]: sortOrder },
         }),
         prisma.product.count({ where }),
     ]);
