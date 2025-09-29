@@ -21,25 +21,26 @@ type ClientCollectionContentProps = {
 };
 
 export default function ClientCollectionContent({
-  initialSort,
   initialActiveFilters,
   sortOptions,
   collectionHandle,
 }: ClientCollectionContentProps) {
   const searchParams = useSearchParams();
   const page = Number(searchParams.get('page') ?? '1');
+  const sort = searchParams.get('sort') ?? 'manual';
 
   const {
     data: fetchedProducts,
     isLoading,
     isFetching,
   } = useQuery({
-    queryKey: ['products', collectionHandle, page],
+    queryKey: ['products', collectionHandle, page, sort],
     queryFn: async () => {
       const res = await getProductsByCollectionHandle(
         collectionHandle,
         page,
-        30
+        30,
+        sort
       );
       // console.log('Server response:', res);
       return {
@@ -55,7 +56,6 @@ export default function ClientCollectionContent({
     window.history.scrollRestoration = 'manual';
   }, [router]);
 
-  const [currentSort] = useState(initialSort);
   const [activeFilters] = useState<ActiveFilter[]>(initialActiveFilters);
 
   const updateUrl = useCallback(
@@ -113,7 +113,7 @@ export default function ClientCollectionContent({
           />
           <SortSelect
             options={sortOptions}
-            currentSort={currentSort}
+            currentSort={sort}
             onSortChange={handleSortChange}
           />
         </div>

@@ -227,54 +227,76 @@ export async function getProductsByCollection(
         ];
     }
 
-    // Handle price sorting differently since it's in variants
-    let orderBy: any = {};
+    let products: any[] = [];
+    let totalCount: number;
 
-    if (sortBy === 'variants.price') {
-        // For price sorting, we need a different approach
-        // Option 1: Use aggregate to get min price and sort by that
-        // Option 2: Use include with variants and sort in memory (less efficient)
-        // For now, let's use a simple approach - sort by the first variant's price
-        orderBy = {
-            variants: {
-                _count: sortOrder,
-            },
-        };
-    } else {
-        orderBy = { [sortBy]: sortOrder };
-    }
-
-    const [products, totalCount] = await Promise.all([
-        prisma.product.findMany({
-            where,
-            include: {
-                variants: {
-                    orderBy: { position: 'asc' },
-                    // For price sorting, we might need to include price in the variant selection
+    // For variant-related sorting (price and position), we need to sort in memory
+    if (sortBy === 'variants.price' || sortBy === 'variants.position') {
+        // Get all products first (without pagination) for in-memory sorting
+        [products, totalCount] = await Promise.all([
+            prisma.product.findMany({
+                where,
+                include: {
+                    variants: {
+                        orderBy: { position: 'asc' },
+                    },
+                    images: { orderBy: { position: 'asc' } },
                 },
-                images: { orderBy: { position: 'asc' } },
-            },
-            skip,
-            take: limit,
-            orderBy,
-        }),
-        prisma.product.count({ where }),
-    ]);
+            }),
+            prisma.product.count({ where }),
+        ]);
 
-    // If we're sorting by price and did the simple approach above,
-    // we might need to do additional sorting in memory
-    if (sortBy === 'variants.price') {
+        // Sort products in memory based on the specified criteria
         products.sort((a, b) => {
-            // Ensure prices are numbers by parsing them
-            const priceA = parseFloat(a.variants[0]?.price?.toString() || '0');
-            const priceB = parseFloat(b.variants[0]?.price?.toString() || '0');
+            if (sortBy === 'variants.price') {
+                // Get the minimum price from variants for each product
+                const getMinPrice = (product: any): number => {
+                    if (!product.variants || product.variants.length === 0) return 0;
+                    const prices = product.variants.map((v: any) => Number(v.price) || 0);
+                    return Math.min(...prices);
+                };
 
-            if (sortOrder === 'asc') {
-                return priceA - priceB;
-            } else {
-                return priceB - priceA;
+                const priceA = getMinPrice(a);
+                const priceB = getMinPrice(b);
+
+                if (sortOrder === 'asc') {
+                    return priceA - priceB;
+                } else {
+                    return priceB - priceA;
+                }
+            } else if (sortBy === 'variants.position') {
+                // Sort by the first variant's position
+                const positionA = a.variants[0]?.position ?? 0;
+                const positionB = b.variants[0]?.position ?? 0;
+
+                if (sortOrder === 'asc') {
+                    return positionA - positionB;
+                } else {
+                    return positionB - positionA;
+                }
             }
+            return 0;
         });
+
+        // Apply pagination after sorting
+        products = products.slice(skip, skip + limit);
+    } else {
+        // Normal sorting for product fields (not variant fields)
+        [products, totalCount] = await Promise.all([
+            prisma.product.findMany({
+                where,
+                include: {
+                    variants: {
+                        orderBy: { position: 'asc' },
+                    },
+                    images: { orderBy: { position: 'asc' } },
+                },
+                skip,
+                take: limit,
+                orderBy: { [sortBy]: sortOrder },
+            }),
+            prisma.product.count({ where }),
+        ]);
     }
 
     return {

@@ -286,7 +286,8 @@ export const getProductsByCollectionHandleEndpoint = catchAsync(
             // Map frontend sort values to backend sort parameters
             if (sort) {
                 const sortMapping: Record<string, { sortBy: string; sortOrder: 'asc' | 'desc' }> = {
-                    manual: { sortBy: 'createdAt', sortOrder: 'desc' }, // Featured - newest first
+                    // Todo Edit manual sort after adding admin panel to edit product position in collections
+                    manual: { sortBy: 'variants.position', sortOrder: 'asc' }, // Featured - sort by variant position
                     'price-asc': { sortBy: 'variants.price', sortOrder: 'asc' },
                     'price-desc': { sortBy: 'variants.price', sortOrder: 'desc' },
                     'date-asc': { sortBy: 'createdAt', sortOrder: 'asc' },

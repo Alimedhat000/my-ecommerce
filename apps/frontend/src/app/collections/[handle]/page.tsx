@@ -63,10 +63,13 @@ export default async function CollectionPage({
     .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
 
   const sortOptions: SortOption[] = [
-    { value: 'popular', label: 'Most Popular' },
-    { value: 'newest', label: 'Newest' },
+    { value: 'manual', label: 'Featured' },
     { value: 'price-asc', label: 'Price: Low to High' },
     { value: 'price-desc', label: 'Price: High to Low' },
+    { value: 'date-asc', label: 'Date: Old to New' },
+    { value: 'date-desc', label: 'Date: New to Old' },
+    { value: 'alpha-asc', label: 'Alphabtically: Low to High' },
+    { value: 'alpha-desc', label: 'Alphabtically: High to Low' },
   ];
 
   // Convert filters to active filters format
@@ -80,8 +83,9 @@ export default async function CollectionPage({
   const queryClient = new QueryClient();
 
   await queryClient.prefetchQuery({
-    queryKey: ['products', handle],
-    queryFn: () => getProductsByCollectionHandle(handle, currentPage),
+    queryKey: ['products', handle, currentPage, currentSort],
+    queryFn: () =>
+      getProductsByCollectionHandle(handle, currentPage, 30, currentSort),
   });
 
   return (
