@@ -33,7 +33,7 @@ export default function ProductGrid({
       <h2 className="sr-only">Product Results</h2>
       <section
         aria-label="Products"
-        className="grid [grid-auto-flow:dense] grid-cols-[repeat(2,auto)] items-start gap-6 self-start lg:grid-cols-[repeat(3,minmax(0,1fr))]"
+        className="grid [grid-auto-flow:dense] grid-cols-[repeat(2,minmax(0,1fr))] gap-6 self-start lg:grid-cols-[repeat(3,minmax(0,1fr))]"
       >
         {products.map((product) => (
           <ProductCard key={product.id} product={product} />
