@@ -23,7 +23,7 @@ export default function SortSelect({
   const currentOption = options.find((option) => option.value === currentSort);
 
   return (
-    <div className="ml-auto flex items-center justify-end gap-3">
+    <div className="ml-auto flex min-w-[350px] items-center justify-end gap-3">
       <Label
         htmlFor="sort-select"
         className="text-foreground text-sm font-bold"
@@ -33,7 +33,7 @@ export default function SortSelect({
       <Select value={currentSort} onValueChange={onSortChange}>
         <SelectTrigger
           id="sort-select"
-          className="border-border bg-background w-[200px]"
+          className="border-border bg-background w-[210px]"
         >
           <SelectValue>{currentOption?.label || 'Select...'}</SelectValue>
         </SelectTrigger>

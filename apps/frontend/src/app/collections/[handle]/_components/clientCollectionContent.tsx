@@ -1,27 +1,24 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ActiveFilters from './activeFilters';
 import SortSelect from './sortSelect';
 import ProductGrid from './productGrid';
 import Pagination from './pagination';
-import { ActiveFilter, SortOption } from '@/types/collection';
-import Filters from './filters';
+import { SortOption } from '@/types/collection';
 import { Settings2 } from 'lucide-react';
 
 import { useQuery } from '@tanstack/react-query';
 import { getProductsByCollectionHandle } from '@/api/collections';
+import { Filters } from './filters/Filters';
 
 type ClientCollectionContentProps = {
-  initialSort: string;
-  initialActiveFilters: ActiveFilter[];
   sortOptions: SortOption[];
   collectionHandle: string;
 };
 
 export default function ClientCollectionContent({
-  initialActiveFilters,
   sortOptions,
   collectionHandle,
 }: ClientCollectionContentProps) {
@@ -29,23 +26,54 @@ export default function ClientCollectionContent({
   const page = Number(searchParams.get('page') ?? '1');
   const sort = searchParams.get('sort') ?? 'manual';
 
+  const vendor = searchParams.get('vendor');
+  const productType = searchParams.get('productType');
+  const gender = searchParams.get('gender');
+  const size = searchParams.get('size');
+  const color = searchParams.get('color');
+  const minPrice = searchParams.get('minPrice');
+  const maxPrice = searchParams.get('maxPrice');
+  const inStock = searchParams.get('inStock');
+
   const {
     data: fetchedProducts,
     isLoading,
     isFetching,
   } = useQuery({
-    queryKey: ['products', collectionHandle, page, sort],
+    queryKey: [
+      'products',
+      collectionHandle,
+      {
+        page,
+        sort,
+        vendor,
+        productType,
+        gender,
+        size,
+        color,
+        minPrice,
+        maxPrice,
+        inStock,
+      },
+    ],
     queryFn: async () => {
       const res = await getProductsByCollectionHandle(
         collectionHandle,
         page,
         30,
-        sort
+        sort,
+        {
+          vendor: vendor || undefined,
+          productType: productType || undefined,
+          gender: gender || undefined,
+          size: size || undefined,
+          color: color || undefined,
+          minPrice: minPrice || undefined,
+          maxPrice: maxPrice || undefined,
+          inStock: inStock ? inStock === 'true' : undefined,
+        }
       );
-      // console.log('Server response:', res);
-      return {
-        ...res,
-      };
+      return res;
     },
   });
 
@@ -55,8 +83,6 @@ export default function ClientCollectionContent({
     // Disable automatic scroll restoration
     window.history.scrollRestoration = 'manual';
   }, [router]);
-
-  const [activeFilters] = useState<ActiveFilter[]>(initialActiveFilters);
 
   const updateUrl = useCallback(
     (updates: Record<string, string | null>) => {
@@ -78,11 +104,45 @@ export default function ClientCollectionContent({
   );
 
   const handleRemoveFilter = useCallback(
-    (filterKey: string) => {
-      updateUrl({ [filterKey]: null });
+    (filterKey: string, filterValue?: string) => {
+      if (filterKey === 'priceRange') {
+        updateUrl({
+          minPrice: null,
+          maxPrice: null,
+        });
+        return;
+      }
+
+      if (filterValue) {
+        // Handle array filters - remove specific value
+        const currentValues = searchParams.get(filterKey)?.split(',') || [];
+        const newValues = currentValues.filter((v) => v !== filterValue);
+
+        if (newValues.length === 0) {
+          updateUrl({ [filterKey]: null });
+        } else {
+          updateUrl({ [filterKey]: newValues.join(',') });
+        }
+      } else {
+        // Handle single value filters - remove entire filter
+        updateUrl({ [filterKey]: null });
+      }
     },
-    [updateUrl]
+    [updateUrl, searchParams]
   );
+
+  const handleRemoveAllFilters = useCallback(() => {
+    updateUrl({
+      vendor: null,
+      productType: null,
+      gender: null,
+      size: null,
+      color: null,
+      minPrice: null,
+      maxPrice: null,
+      inStock: null,
+    });
+  }, [updateUrl]);
 
   const handleSortChange = useCallback(
     (sortValue: string) => {
@@ -108,9 +168,10 @@ export default function ClientCollectionContent({
         </div>
         <div className="flex items-center pb-10">
           <ActiveFilters
-            filters={activeFilters}
             onRemoveFilter={handleRemoveFilter}
+            onRemoveAllFilters={handleRemoveAllFilters}
           />
+
           <SortSelect
             options={sortOptions}
             currentSort={sort}
@@ -120,16 +181,13 @@ export default function ClientCollectionContent({
       </div>
 
       {/* Filters */}
-      <Filters />
+      <Filters collectionHandle={collectionHandle} />
 
       {/* Results */}
-      <section aria-label="Products" className="grid gap-6">
-        <h2 className="sr-only">Product Results</h2>
-        <ProductGrid
-          products={fetchedProducts?.data ?? []}
-          loading={isFetching && !isLoading}
-        />
-      </section>
+      <ProductGrid
+        products={fetchedProducts?.data ?? []}
+        loading={isFetching && !isLoading}
+      />
 
       {/* Pagination */}
       <Pagination

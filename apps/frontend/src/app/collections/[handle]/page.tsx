@@ -19,20 +19,41 @@ type CollectionPageProps = {
 };
 
 function formatHandle(handle: string): string {
-  const specialCases: Record<string, string> = {
+  const transformations: Record<string, string> = {
+    // Direct replacements
     mens: "Men's",
     womens: "Women's",
     kids: "Kids'",
+    tshirt: 'T-Shirt',
+    tshirts: 'T-Shirts',
+
+    // Common patterns
+    't-shirt': 'T-Shirt',
+    't-shirts': 'T-Shirts',
+    'long-sleeve': 'Long Sleeve',
+    'short-sleeve': 'Short Sleeve',
+    'crew-neck': 'Crew Neck',
+    'v-neck': 'V-Neck',
   };
 
-  return handle
+  let formatted = handle
     .split('-')
     .map((word) => {
       const lower = word.toLowerCase();
-      if (specialCases[lower]) return specialCases[lower];
-      return word.charAt(0).toUpperCase() + word.slice(1);
+      return (
+        transformations[lower] || word.charAt(0).toUpperCase() + word.slice(1)
+      );
     })
     .join(' ');
+
+  // Handle common product name patterns
+  formatted = formatted
+    .replace(/\bT Shirt\b/g, 'T-Shirt')
+    .replace(/\bT Shirts\b/g, 'T-Shirts')
+    .replace(/\bLong Sleeve\b/g, 'Long Sleeve')
+    .replace(/\bShort Sleeve\b/g, 'Short Sleeve');
+
+  return formatted;
 }
 
 export async function generateMetadata({
@@ -55,12 +76,7 @@ export default async function CollectionPage({
   // Parse search params for initial server-side data
   const resolvedSearchParams = await searchParams;
   const currentPage = parseInt(resolvedSearchParams.page || '1', 10);
-  const currentSort = resolvedSearchParams.sort || 'popular';
-
-  // Extract filters from searchParams
-  const filters = Object.entries(resolvedSearchParams)
-    .filter(([key]) => !['page', 'sort'].includes(key))
-    .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
+  const currentSort = resolvedSearchParams.sort || 'manual';
 
   const sortOptions: SortOption[] = [
     { value: 'manual', label: 'Featured' },
@@ -72,20 +88,20 @@ export default async function CollectionPage({
     { value: 'alpha-desc', label: 'Alphabtically: High to Low' },
   ];
 
-  // Convert filters to active filters format
-  const activeFilters = Object.entries(filters).map(([key, value]) => ({
-    key,
-    label: key.charAt(0).toUpperCase() + key.slice(1),
-    value: value as string,
-    displayText: `${key}: ${value}`,
-  }));
-
   const queryClient = new QueryClient();
 
   await queryClient.prefetchQuery({
     queryKey: ['products', handle, currentPage, currentSort],
     queryFn: () =>
       getProductsByCollectionHandle(handle, currentPage, 30, currentSort),
+  });
+
+  await queryClient.prefetchQuery({
+    queryKey: ['filters', handle],
+    queryFn: () =>
+      fetch(`/api/collections/handle/${handle}/filters`).then((res) =>
+        res.json()
+      ),
   });
 
   return (
@@ -103,8 +119,6 @@ export default async function CollectionPage({
             {/* Client component handles interactive filtering/sorting */}
             <HydrationBoundary state={dehydrate(queryClient)}>
               <ClientCollectionContent
-                initialSort={currentSort}
-                initialActiveFilters={activeFilters}
                 sortOptions={sortOptions}
                 collectionHandle={handle}
               />
