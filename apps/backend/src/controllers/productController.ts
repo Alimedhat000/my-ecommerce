@@ -11,6 +11,7 @@ import {
 import { catchAsync } from '../utils/errorHandler';
 import logger from '../utils/logger';
 import { createImage, deleteImage, getImagesByProductId } from '../services/imageService';
+import { getCategoryByHandle } from '../services/collectionService';
 
 const ProductStatus = {
     DRAFT: 'DRAFT',
@@ -231,6 +232,56 @@ export const getProductsByCollectionEndpoint = catchAsync(async (req: Request, r
         throw error;
     }
 });
+
+// Get all products in a collection (by handle, public)
+export const getProductsByCollectionHandleEndpoint = catchAsync(
+    async (req: Request, res: Response) => {
+        try {
+            const { handle } = req.params;
+            const { page, limit } = req.query;
+
+            if (!handle || typeof handle !== 'string') {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Invalid collection handle',
+                });
+            }
+
+            // Look up the collection by handle
+            const collection = await getCategoryByHandle(handle);
+            if (!collection) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'Collection not found',
+                });
+            }
+
+            const pagination = {
+                page: page ? Math.max(1, parseInt(page as string)) : 1,
+                limit: limit ? Math.min(100, Math.max(1, parseInt(limit as string))) : 20,
+            };
+
+            const products = await getProductsByCollection(collection.id, pagination);
+
+            res.json({
+                success: true,
+                data: products,
+                meta: {
+                    collectionId: collection.id,
+                    collectionHandle: collection.handle,
+                    productsCount: products.length,
+                },
+            });
+        } catch (error) {
+            console.error('Error fetching products by collection handle:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Failed to fetch products',
+            });
+            throw error;
+        }
+    }
+);
 
 //! ---------- Admin Controllers ----------
 
