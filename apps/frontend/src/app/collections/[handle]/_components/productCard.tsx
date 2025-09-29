@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Product } from '@/types/collection';
@@ -29,25 +29,22 @@ const preloadImages = (imageUrls: string[]): Promise<void[]> => {
 };
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const getInitialImage = () => {
-    const firstAvailableVariant = product.variants.find((v) => v.available);
-    if (firstAvailableVariant) {
-      const variantImage = product.images.find((img) =>
-        img.variantIds.includes(firstAvailableVariant.shopifyId)
-      );
-      if (variantImage) return variantImage;
-    }
-    return product.images[0];
-  };
-
-  const [selectedImage, setSelectedImage] = useState(getInitialImage());
-  const [displayedImage, setDisplayedImage] = useState(selectedImage);
-  const [nextImage, setNextImage] = useState<typeof selectedImage | null>(null);
+  // Initialize with null and set in useEffect to avoid hydration mismatch
+  const [selectedImage, setSelectedImage] = useState<
+    (typeof product.images)[0] | null
+  >(null);
+  const [displayedImage, setDisplayedImage] = useState<
+    (typeof product.images)[0] | null
+  >(null);
+  const [nextImage, setNextImage] = useState<(typeof product.images)[0] | null>(
+    null
+  );
   const [fade, setFade] = useState(false);
   const [preloadedImages, setPreloadedImages] = useState<Set<string>>(
-    new Set([selectedImage.src])
+    new Set()
   );
 
+  // Calculate badges - this is safe as it's deterministic
   const price = product.variants[0].price;
   const compareAtPrice = product.variants[0].compareAtPrice;
   const hasDiscount = compareAtPrice && compareAtPrice > price;
@@ -75,9 +72,28 @@ export default function ProductCard({ product }: ProductCardProps) {
     (b) => b.type !== 'sale' && b.type !== 'soldout'
   );
 
+  // Initialize images after component mounts (client-side only)
+  useEffect(() => {
+    const getInitialImage = () => {
+      const firstAvailableVariant = product.variants.find((v) => v.available);
+      if (firstAvailableVariant) {
+        const variantImage = product.images.find((img) =>
+          img.variantIds.includes(firstAvailableVariant.shopifyId)
+        );
+        if (variantImage) return variantImage;
+      }
+      return product.images[0];
+    };
+
+    const initialImage = getInitialImage();
+    setSelectedImage(initialImage);
+    setDisplayedImage(initialImage);
+    setPreloadedImages(new Set([initialImage.src]));
+  }, [product.images, product.variants]);
+
   const handleSwatchClick = useCallback(
-    async (img: typeof selectedImage) => {
-      if (img.src === displayedImage.src) return;
+    async (img: (typeof product.images)[0]) => {
+      if (!displayedImage || img.src === displayedImage.src) return;
 
       setNextImage(img);
 
@@ -130,8 +146,22 @@ export default function ProductCard({ product }: ProductCardProps) {
         }, 300); // transition duration
       });
     },
-    [displayedImage.src, preloadedImages, product.images, product.variants]
+    [displayedImage, preloadedImages, product]
   );
+
+  // Don't render images until client-side initialization
+  if (!selectedImage || !displayedImage) {
+    return (
+      <article className="bg-background relative grid grid-rows-[auto_1fr_auto] overflow-hidden rounded-md">
+        {/* Skeleton loader */}
+        <div className="aspect-[65/100] w-full animate-pulse rounded-t-md bg-gray-200" />
+        <div className="space-y-3 p-4">
+          <div className="h-4 animate-pulse rounded bg-gray-200" />
+          <div className="h-6 animate-pulse rounded bg-gray-200" />
+        </div>
+      </article>
+    );
+  }
 
   return (
     <article className="bg-background relative grid grid-rows-[auto_1fr_auto] overflow-hidden rounded-md">
