@@ -1,11 +1,5 @@
+import { ProductBadge as ProductBadgeType } from '@/types/collection';
 import React from 'react';
-
-export interface ProductBadgeType {
-  text: string;
-  type: 'sale' | 'category' | 'feature' | 'custom';
-  color?: string;
-  backgroundColor?: string;
-}
 
 interface ProductBadgeProps {
   badge: ProductBadgeType;
@@ -15,8 +9,9 @@ const getBadgeStyles = (type: ProductBadgeType['type']) => {
   const styles = {
     sale: 'bg-destructive',
     category: 'bg-brand-orange',
-    feature: 'bg-blue-600',
+    feature: 'bg-[#84e92d]',
     custom: 'bg-gray-600',
+    soldout: 'bg-black',
   };
   return styles[type] || styles.custom;
 };

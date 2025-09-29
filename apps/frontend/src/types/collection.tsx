@@ -1,34 +1,60 @@
 // types/collection.ts
 export interface Product {
-  id: string;
+  id: number; // matches API "id"
+  shopifyId: string;
   title: string;
   handle: string;
+  bodyHtml: string;
+  vendor: string; // API uses vendor instead of collections
+  tags: string[];
+  status: string;
+  publishedAt: string;
+  createdAt: string;
+  updatedAt: string;
+  seoTitle?: string | null;
+  seoDescription?: string | null;
   images: ProductImage[];
   variants: ProductVariant[];
-  collections: ProductCollection[];
-  badges?: ProductBadge[];
+  badges?: ProductBadge[]; // optional
   compareAtPrice?: number;
   price: number;
-  currency: string;
 }
 
 export interface ProductImage {
-  id: string;
+  id: number;
+  shopifyId: string;
   src: string;
-  alt: string;
+  alt?: string | null;
   width: number;
   height: number;
+  position: number;
+  variantIds: string[];
+  productId: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ProductVariant {
-  id: string;
+  id: number;
+  shopifyId: string;
   title: string;
-  color?: string;
-  colorName?: string;
-  colorHex?: string;
-  available: boolean;
+  sku: string;
+  barcode?: string | null;
   price: number;
   compareAtPrice?: number;
+  inventoryQty: number;
+  position: number;
+  weight: number;
+  requiresShipping: boolean;
+  taxable: boolean;
+  available: boolean;
+  createdAt: string;
+  updatedAt: string;
+  option1?: string | null;
+  option2?: string | null;
+  option3?: string | null;
+  productId: number;
+  imageId?: number | null;
 }
 
 export interface ProductCollection {
@@ -38,7 +64,7 @@ export interface ProductCollection {
 
 export interface ProductBadge {
   text: string;
-  type: 'sale' | 'category' | 'feature' | 'custom';
+  type: 'sale' | 'category' | 'feature' | 'custom' | 'soldout';
   color?: string;
   backgroundColor?: string;
 }

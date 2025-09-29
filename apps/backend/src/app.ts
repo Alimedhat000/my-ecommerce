@@ -83,7 +83,7 @@ if (allowedOrigins.length === 0) {
 // ---------- Rate Limiting ----------
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: Number(process.env.RATE_LIMIT_MAX || 100),
+    max: Number(process.env.RATE_LIMIT_MAX || 1500),
     standardHeaders: true,
     legacyHeaders: false,
     message: {
@@ -98,7 +98,7 @@ app.get('/', (req: Request, res: Response) => {
     res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
-app.use('/api', apiLimiter);
+// app.use('/api', apiLimiter);
 
 // ---------- Optional: CSRF Protection ----------
 if (process.env.ENABLE_CSRF === 'true') {

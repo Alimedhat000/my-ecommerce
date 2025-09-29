@@ -1,40 +1,56 @@
 'use client';
 
-import React, { useState, useCallback, useTransition } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ActiveFilters from './activeFilters';
 import SortSelect from './sortSelect';
 import ProductGrid from './productGrid';
 import Pagination from './pagination';
-import { Product, ActiveFilter, SortOption } from '@/types/collection';
+import { ActiveFilter, SortOption } from '@/types/collection';
 import Filters from './filters';
 import { Settings2 } from 'lucide-react';
 
+import { useQuery } from '@tanstack/react-query';
+import { getProductsByCollectionHandle } from '@/api/collections';
+
 type ClientCollectionContentProps = {
-  initialProducts: Product[];
-  initialPage: number;
   initialSort: string;
   initialActiveFilters: ActiveFilter[];
   sortOptions: SortOption[];
-  totalPages: number;
   collectionHandle: string;
 };
 
 export default function ClientCollectionContent({
-  initialProducts,
-  initialPage,
   initialSort,
   initialActiveFilters,
   sortOptions,
-  totalPages,
   collectionHandle,
 }: ClientCollectionContentProps) {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
+  const page = Number(searchParams.get('page') ?? '1');
 
-  const [products] = useState<Product[]>(initialProducts);
-  const [currentPage] = useState(initialPage);
+  const {
+    data: fetchedProducts,
+    isLoading,
+    isFetching,
+  } = useQuery({
+    queryKey: ['products', collectionHandle, page],
+    queryFn: async () => {
+      const res = await getProductsByCollectionHandle(
+        collectionHandle,
+        page,
+        30
+      );
+      // console.log('Server response:', res);
+      return {
+        ...res,
+        // items: res.data.map(mapServerProduct),
+      };
+    },
+  });
+
+  const router = useRouter();
+
   const [currentSort] = useState(initialSort);
   const [activeFilters] = useState<ActiveFilter[]>(initialActiveFilters);
 
@@ -52,9 +68,7 @@ export default function ClientCollectionContent({
 
       const url = `/collections/${collectionHandle}?${current.toString()}`;
 
-      startTransition(() => {
-        router.push(url);
-      });
+      router.push(url);
     },
     [collectionHandle, router, searchParams]
   );
@@ -107,13 +121,16 @@ export default function ClientCollectionContent({
       {/* Results */}
       <section aria-label="Products" className="grid gap-6">
         <h2 className="sr-only">Product Results</h2>
-        <ProductGrid products={products} loading={isPending} />
+        <ProductGrid
+          products={fetchedProducts?.data ?? []}
+          loading={isFetching && !isLoading}
+        />
       </section>
 
       {/* Pagination */}
       <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
+        currentPage={fetchedProducts?.meta.currentPage ?? 1}
+        totalPages={fetchedProducts?.meta.totalPages ?? 1}
         onPageChange={handlePageChange}
       />
     </>

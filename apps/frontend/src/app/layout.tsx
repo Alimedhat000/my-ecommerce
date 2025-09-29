@@ -2,6 +2,7 @@ import './globals.css';
 import localFont from 'next/font/local';
 import Footer from '@/components/layout/footer';
 import HeaderWrapper from '@/components/layout/headerWrapper';
+import { Providers } from './providers';
 
 const oswald = localFont({
   src: '../fonts/Oswald-VariableFont_wght.ttf',
@@ -31,9 +32,11 @@ export default function RootLayout({
       <body
         className={`${oswald.variable} ${robotoCondensed.variable} ${firaCode.variable} bg-muted antialiased`}
       >
-        <HeaderWrapper />
-        {children}
-        <Footer />
+        <Providers>
+          <HeaderWrapper />
+          {children}
+          <Footer />
+        </Providers>
       </body>
     </html>
   );
