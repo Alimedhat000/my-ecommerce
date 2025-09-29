@@ -32,14 +32,13 @@ function formatHandle(handle: string): string {
 export async function generateMetadata({
   params,
 }: CollectionPageProps): Promise<Metadata> {
-  const handle = formatHandle(params.handle);
-
+  const { handle } = await params;
   // Optionally fetch more detailed metadata from your API
   // const metadata = await getCollectionMetadata(params.handle);
 
   return {
-    title: `${handle} | Your Store`,
-    description: `Discover our ${handle} collection. Shop the latest styles and trends now.`,
+    title: `${formatHandle(handle)} | Your Store`,
+    description: `Discover our ${formatHandle(handle)} collection. Shop the latest styles and trends now.`,
   };
 }
 
@@ -47,14 +46,15 @@ export default async function CollectionPage({
   params,
   searchParams,
 }: CollectionPageProps) {
-  const handle = formatHandle(params.handle);
+  const { handle } = await params;
 
   // Parse search params for initial server-side data
-  const currentPage = parseInt(searchParams.page || '1', 10);
-  const currentSort = searchParams.sort || 'popular';
+  const resolvedSearchParams = await searchParams;
+  const currentPage = parseInt(resolvedSearchParams.page || '1', 10);
+  const currentSort = resolvedSearchParams.sort || 'popular';
 
   // Extract filters from searchParams
-  const filters = Object.entries(searchParams)
+  const filters = Object.entries(resolvedSearchParams)
     .filter(([key]) => !['page', 'sort'].includes(key))
     .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
 
@@ -333,7 +333,7 @@ export default async function CollectionPage({
     <main className="mb-20">
       <div className="my-15">
         <h1 className="text-center text-4xl font-medium tracking-tight uppercase">
-          {handle}
+          {formatHandle(handle)}
         </h1>
       </div>
 
@@ -349,7 +349,7 @@ export default async function CollectionPage({
               initialActiveFilters={activeFilters}
               sortOptions={sortOptions}
               totalPages={10}
-              collectionHandle={params.handle}
+              collectionHandle={formatHandle(handle)}
             />
           </div>
         </div>
