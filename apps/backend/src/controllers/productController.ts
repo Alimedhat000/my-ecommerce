@@ -213,7 +213,7 @@ export const getProductsByCollectionEndpoint = catchAsync(async (req: Request, r
             limit: limit ? Math.min(100, Math.max(1, parseInt(limit as string))) : 20,
         };
 
-        const products = await getProductsByCollection(collectionId, pagination);
+        const { products, totalCount } = await getProductsByCollection(collectionId, pagination);
 
         res.json({
             success: true,
@@ -221,6 +221,9 @@ export const getProductsByCollectionEndpoint = catchAsync(async (req: Request, r
             meta: {
                 collectionId,
                 productsCount: products.length,
+                totalCount,
+                totalPages: Math.ceil(totalCount / pagination.limit),
+                currentPage: pagination.page,
             },
         });
     } catch (error) {
@@ -261,7 +264,10 @@ export const getProductsByCollectionHandleEndpoint = catchAsync(
                 limit: limit ? Math.min(100, Math.max(1, parseInt(limit as string))) : 20,
             };
 
-            const products = await getProductsByCollection(collection.id, pagination);
+            const { products, totalCount } = await getProductsByCollection(
+                collection.id,
+                pagination
+            );
 
             res.json({
                 success: true,
@@ -270,6 +276,9 @@ export const getProductsByCollectionHandleEndpoint = catchAsync(
                     collectionId: collection.id,
                     collectionHandle: collection.handle,
                     productsCount: products.length,
+                    totalCount,
+                    totalPages: Math.ceil(totalCount / pagination.limit),
+                    currentPage: pagination.page,
                 },
             });
         } catch (error) {

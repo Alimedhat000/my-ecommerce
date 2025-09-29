@@ -189,29 +189,39 @@ export async function getProductsByCollection(
     const { page = 1, limit = 20 } = pagination;
     const skip = (page - 1) * limit;
 
-    return prisma.product.findMany({
-        where: {
-            collections: {
-                some: {
-                    collectionId,
+    const where = {
+        collections: {
+            some: {
+                collectionId,
+            },
+        },
+        status: ProductStatus.ACTIVE,
+    };
+
+    const [products, totalCount] = await Promise.all([
+        prisma.product.findMany({
+            where,
+            include: {
+                variants: {
+                    orderBy: { position: 'asc' },
+                },
+                images: {
+                    orderBy: { position: 'asc' },
                 },
             },
-            status: ProductStatus.ACTIVE,
-        },
-        include: {
-            variants: {
-                orderBy: { position: 'asc' },
+            skip,
+            take: limit,
+            orderBy: {
+                createdAt: 'desc',
             },
-            images: {
-                orderBy: { position: 'asc' },
-            },
-        },
-        skip,
-        take: limit,
-        orderBy: {
-            createdAt: 'desc',
-        },
-    });
+        }),
+        prisma.product.count({ where }),
+    ]);
+
+    return {
+        products,
+        totalCount,
+    };
 }
 
 //! Admin only services
