@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ActiveFilters from './activeFilters';
 import SortSelect from './sortSelect';
@@ -44,12 +44,16 @@ export default function ClientCollectionContent({
       // console.log('Server response:', res);
       return {
         ...res,
-        // items: res.data.map(mapServerProduct),
       };
     },
   });
 
   const router = useRouter();
+
+  useEffect(() => {
+    // Disable automatic scroll restoration
+    window.history.scrollRestoration = 'manual';
+  }, [router]);
 
   const [currentSort] = useState(initialSort);
   const [activeFilters] = useState<ActiveFilter[]>(initialActiveFilters);
