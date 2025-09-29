@@ -15,6 +15,7 @@ export interface ProductFilters {
     gender?: string[];
     size?: string[];
     color?: string[];
+    inStock?: boolean;
 }
 
 export interface PaginationOptions {

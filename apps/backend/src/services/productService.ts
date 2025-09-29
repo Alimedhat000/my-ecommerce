@@ -229,7 +229,7 @@ export async function getProductsByCollection(
 
     // Product Type filter
     if (filters.productType) {
-        where.productType = filters.productType;
+        where.product_type = filters.productType;
     }
 
     // Gender filter (from tags)
@@ -244,30 +244,53 @@ export async function getProductsByCollection(
         }
     }
 
-    // Size filter (from variants.option2)
-    if (filters.size && filters.size.length > 0) {
+    if (filters.inStock) {
         where.variants = {
             ...where.variants,
             some: {
                 ...where.variants?.some,
-                option2: {
-                    in: filters.size,
-                },
+                available: true,
             },
         };
     }
 
-    // Color filter (from variants.option1)
-    if (filters.color && filters.color.length > 0) {
+    // If both inStock and other variant filters exist, combine them
+    if (filters.inStock && (filters.size || filters.color)) {
         where.variants = {
             ...where.variants,
             some: {
                 ...where.variants?.some,
-                option1: {
-                    in: filters.color,
-                },
+                available: true,
+                // Keep existing size/color filters if they exist
+                ...(filters.size && { option2: { in: filters.size } }),
+                ...(filters.color && { option1: { in: filters.color } }),
             },
         };
+    } else {
+        // Handle size and color filters separately if no inStock filter
+        if (filters.size && filters.size.length > 0) {
+            where.variants = {
+                ...where.variants,
+                some: {
+                    ...where.variants?.some,
+                    option2: {
+                        in: filters.size,
+                    },
+                },
+            };
+        }
+
+        if (filters.color && filters.color.length > 0) {
+            where.variants = {
+                ...where.variants,
+                some: {
+                    ...where.variants?.some,
+                    option1: {
+                        in: filters.color,
+                    },
+                },
+            };
+        }
     }
 
     let products: any[] = [];

@@ -273,6 +273,7 @@ export const getProductsByCollectionHandleEndpoint = catchAsync(
                 color,
                 minPrice,
                 maxPrice,
+                inStock,
             } = req.query; // Add sort parameter
 
             if (!handle || typeof handle !== 'string') {
@@ -344,6 +345,10 @@ export const getProductsByCollectionHandleEndpoint = catchAsync(
                     min: minPrice ? parseFloat(minPrice as string) : undefined,
                     max: maxPrice ? parseFloat(maxPrice as string) : undefined,
                 };
+            }
+
+            if (inStock) {
+                filters.inStock = inStock === 'true';
             }
 
             const { products, totalCount } = await getProductsByCollection(
