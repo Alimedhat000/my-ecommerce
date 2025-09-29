@@ -126,7 +126,7 @@ router.get('/:id/products', productController.getProductsByCollectionEndpoint);
  * /collections/handle/{handle}/products:
  *   get:
  *     summary: Get products by collection handle
- *     description: Retrieve all published products in a specific collection by its handle with pagination and sorting support
+ *     description: Retrieve all published products in a specific collection by its handle with pagination, sorting, and filtering support
  *     tags: [Collections]
  *     parameters:
  *       - in: path
@@ -158,13 +158,60 @@ router.get('/:id/products', productController.getProductsByCollectionEndpoint);
  *           default: manual
  *         description: |
  *           Sort products by various criteria:
- *           - manual: Featured products (default)
+ *           - manual: Featured products (sorted by variant position)
  *           - price-asc: Price low to high
  *           - price-desc: Price high to low
  *           - date-asc: Date old to new
  *           - date-desc: Date new to old
  *           - alpha-asc: Alphabetically A to Z
  *           - alpha-desc: Alphabetically Z to A
+ *       - in: query
+ *         name: vendor
+ *         schema:
+ *           type: string
+ *         description: Filter by brand/vendor
+ *       - in: query
+ *         name: productType
+ *         schema:
+ *           type: string
+ *         description: Filter by product type (T-Shirt, Hoodie, etc.)
+ *       - in: query
+ *         name: gender
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *         style: form
+ *         explode: false
+ *         description: Filter by gender (Men, Women, Unisex) - comma separated or repeated parameter
+ *       - in: query
+ *         name: size
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *         style: form
+ *         explode: false
+ *         description: Filter by size (S, M, L, XL, etc.) - comma separated or repeated parameter
+ *       - in: query
+ *         name: color
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *         style: form
+ *         explode: false
+ *         description: Filter by color (Black, White, Red, etc.) - comma separated or repeated parameter
+ *       - in: query
+ *         name: minPrice
+ *         schema:
+ *           type: number
+ *         description: Minimum price filter
+ *       - in: query
+ *         name: maxPrice
+ *         schema:
+ *           type: number
+ *         description: Maximum price filter
  *     responses:
  *       200:
  *         description: Products retrieved successfully
@@ -202,7 +249,7 @@ router.get('/:id/products', productController.getProductsByCollectionEndpoint);
  *                       type: integer
  *                       example: 1
  *       400:
- *         description: Invalid collection handle
+ *         description: Invalid collection handle or parameters
  *       404:
  *         description: Collection not found
  *       500:
@@ -210,5 +257,27 @@ router.get('/:id/products', productController.getProductsByCollectionEndpoint);
  */
 
 router.get('/handle/:handle/products', productController.getProductsByCollectionHandleEndpoint);
+
+/**
+ * @swagger
+ * /collections/handle/{handle}/filters:
+ *   get:
+ *     summary: Get available filters for a collection by handle
+ *     description: Retrieve all available filter options for products in a collection by its handle
+ *     tags: [Collections]
+ *     parameters:
+ *       - in: path
+ *         name: handle
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Collection handle
+ *     responses:
+ *       200:
+ *         description: Filters retrieved successfully
+ *       404:
+ *         description: Collection not found
+ */
+router.get('/handle/:handle/filters', productController.getCollectionFiltersEndpoint);
 
 export default router;

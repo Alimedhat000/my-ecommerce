@@ -10,6 +10,11 @@ export interface ProductFilters {
         max?: number;
     };
     search?: string;
+    // ADD THESE NEW FILTERS:
+    productType?: string;
+    gender?: string[];
+    size?: string[];
+    color?: string[];
 }
 
 export interface PaginationOptions {

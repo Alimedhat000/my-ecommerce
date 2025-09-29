@@ -7,6 +7,7 @@ import {
     updateProduct,
     deleteProduct,
     getProductsByCollection,
+    getCollectionFilters,
 } from '../services/productService';
 import { catchAsync } from '../utils/errorHandler';
 import logger from '../utils/logger';
@@ -260,7 +261,19 @@ export const getProductsByCollectionHandleEndpoint = catchAsync(
     async (req: Request, res: Response) => {
         try {
             const { handle } = req.params;
-            const { page, limit, sort } = req.query; // Add sort parameter
+            const {
+                page,
+                limit,
+                sort,
+
+                vendor,
+                productType,
+                gender,
+                size,
+                color,
+                minPrice,
+                maxPrice,
+            } = req.query; // Add sort parameter
 
             if (!handle || typeof handle !== 'string') {
                 return res.status(400).json({
@@ -303,9 +316,40 @@ export const getProductsByCollectionHandleEndpoint = catchAsync(
                 }
             }
 
+            const filters: ProductFilters = {};
+
+            if (vendor) filters.vendor = vendor as string;
+            if (productType) filters.productType = productType as string;
+
+            if (gender) {
+                filters.gender = Array.isArray(gender)
+                    ? gender.map(String)
+                    : (gender as string).split(',').map((g) => g.trim());
+            }
+
+            if (size) {
+                filters.size = Array.isArray(size)
+                    ? size.map(String)
+                    : (size as string).split(',').map((s) => s.trim());
+            }
+
+            if (color) {
+                filters.color = Array.isArray(color)
+                    ? color.map(String)
+                    : (color as string).split(',').map((c) => c.trim());
+            }
+
+            if (minPrice || maxPrice) {
+                filters.priceRange = {
+                    min: minPrice ? parseFloat(minPrice as string) : undefined,
+                    max: maxPrice ? parseFloat(maxPrice as string) : undefined,
+                };
+            }
+
             const { products, totalCount } = await getProductsByCollection(
                 collection.id,
-                pagination
+                pagination,
+                filters
             );
 
             res.json({
@@ -330,6 +374,46 @@ export const getProductsByCollectionHandleEndpoint = catchAsync(
         }
     }
 );
+
+// controllers/productController.ts - Updated version
+export const getCollectionFiltersEndpoint = catchAsync(async (req: Request, res: Response) => {
+    try {
+        const collectionId = parseInt(req.params.id);
+        const { handle } = req.params;
+
+        let targetCollectionId: number;
+
+        if (handle) {
+            // Get by handle
+            const collection = await getCategoryByHandle(handle);
+            if (!collection) {
+                return res.status(404).json({ success: false, error: 'Collection not found' });
+            }
+            targetCollectionId = collection.id;
+        } else if (collectionId) {
+            // Get by ID
+            if (isNaN(collectionId) || collectionId <= 0) {
+                return res.status(400).json({ success: false, error: 'Invalid collection ID' });
+            }
+            targetCollectionId = collectionId;
+        } else {
+            return res
+                .status(400)
+                .json({ success: false, error: 'Collection ID or handle required' });
+        }
+
+        // Use the service function to get filters
+        const filters = await getCollectionFilters(targetCollectionId);
+
+        res.json({
+            success: true,
+            data: filters,
+        });
+    } catch (error) {
+        console.error('Error fetching collection filters:', error);
+        res.status(500).json({ success: false, error: 'Failed to fetch filters' });
+    }
+});
 
 //! ---------- Admin Controllers ----------
 

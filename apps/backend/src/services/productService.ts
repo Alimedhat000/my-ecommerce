@@ -227,6 +227,49 @@ export async function getProductsByCollection(
         ];
     }
 
+    // Product Type filter
+    if (filters.productType) {
+        where.productType = filters.productType;
+    }
+
+    // Gender filter (from tags)
+    if (filters.gender && filters.gender.length > 0) {
+        // Combine with existing tags filter if it exists
+        if (where.tags) {
+            where.tags.hasSome = [...where.tags.hasSome, ...filters.gender];
+        } else {
+            where.tags = {
+                hasSome: filters.gender,
+            };
+        }
+    }
+
+    // Size filter (from variants.option2)
+    if (filters.size && filters.size.length > 0) {
+        where.variants = {
+            ...where.variants,
+            some: {
+                ...where.variants?.some,
+                option2: {
+                    in: filters.size,
+                },
+            },
+        };
+    }
+
+    // Color filter (from variants.option1)
+    if (filters.color && filters.color.length > 0) {
+        where.variants = {
+            ...where.variants,
+            some: {
+                ...where.variants?.some,
+                option1: {
+                    in: filters.color,
+                },
+            },
+        };
+    }
+
     let products: any[] = [];
     let totalCount: number;
 
@@ -302,6 +345,68 @@ export async function getProductsByCollection(
     return {
         products,
         totalCount,
+    };
+}
+
+export async function getCollectionFilters(collectionId: number) {
+    // Get all products in the collection (without pagination to analyze all products)
+    const products = await prisma.product.findMany({
+        where: {
+            collections: {
+                some: {
+                    collectionId,
+                },
+            },
+            status: ProductStatus.ACTIVE,
+        },
+        include: {
+            variants: true,
+        },
+    });
+
+    // Extract unique values for each filter category
+
+    // Brand filter - from vendor field
+    const vendors = [...new Set(products.map((p) => p.vendor).filter(Boolean))].sort();
+
+    // Product Type filter - from productType field
+    const productTypes = [...new Set(products.map((p) => p.product_type).filter(Boolean))].sort();
+
+    // Gender filter - extract from tags
+    const genderTags = products.flatMap((p) =>
+        p.tags.filter((tag) =>
+            ['men', 'women', 'unisex', 'mens', 'womens'].includes(tag.toLowerCase())
+        )
+    );
+    const genders = [...new Set(genderTags)].sort();
+
+    // Size filter - from variants.option2
+    const sizes = [
+        ...new Set(products.flatMap((p) => p.variants.map((v) => v.option2).filter(Boolean))),
+    ].sort();
+
+    // Color filter - from variants.option1
+    const colors = [
+        ...new Set(products.flatMap((p) => p.variants.map((v) => v.option1).filter(Boolean))),
+    ].sort();
+
+    // Price range - calculate min/max from all variant prices
+    const allPrices = products.flatMap((p) => p.variants.map((v) => Number(v.price) || 0));
+    const priceRange = {
+        min: allPrices.length > 0 ? Math.floor(Math.min(...allPrices)) : 0,
+        max: allPrices.length > 0 ? Math.ceil(Math.max(...allPrices)) : 1000,
+    };
+
+    // Return the structured filter data
+    return {
+        vendors,
+        productTypes,
+        genders,
+        sizes,
+        colors,
+        priceRange,
+        // Optional: total product count for reference
+        totalProducts: products.length,
     };
 }
 

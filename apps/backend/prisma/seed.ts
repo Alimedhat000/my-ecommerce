@@ -54,6 +54,7 @@ async function main() {
                 bodyHtml: product.body_html,
                 vendor: product.vendor,
                 tags: product.tags || [],
+                product_type: product.product_type,
                 status: 'ACTIVE',
                 publishedAt: product.published_at ? safeDate(product.published_at) : null,
                 createdAt: safeDate(product.created_at),
