@@ -15,7 +15,7 @@ export interface ProductFilters {
 export interface PaginationOptions {
     page?: number;
     limit?: number;
-    sortBy?: 'title' | 'createdAt' | 'updatedAt' | 'publishedAt';
+    sortBy?: string;
     sortOrder?: 'asc' | 'desc';
 }
 

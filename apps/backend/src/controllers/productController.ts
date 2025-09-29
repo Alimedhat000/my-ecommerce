@@ -260,7 +260,7 @@ export const getProductsByCollectionHandleEndpoint = catchAsync(
     async (req: Request, res: Response) => {
         try {
             const { handle } = req.params;
-            const { page, limit } = req.query;
+            const { page, limit, sort } = req.query; // Add sort parameter
 
             if (!handle || typeof handle !== 'string') {
                 return res.status(400).json({
@@ -278,10 +278,29 @@ export const getProductsByCollectionHandleEndpoint = catchAsync(
                 });
             }
 
-            const pagination = {
+            const pagination: PaginationOptions = {
                 page: page ? Math.max(1, parseInt(page as string)) : 1,
                 limit: limit ? Math.min(100, Math.max(1, parseInt(limit as string))) : 20,
             };
+
+            // Map frontend sort values to backend sort parameters
+            if (sort) {
+                const sortMapping: Record<string, { sortBy: string; sortOrder: 'asc' | 'desc' }> = {
+                    manual: { sortBy: 'createdAt', sortOrder: 'desc' }, // Featured - newest first
+                    'price-asc': { sortBy: 'variants.price', sortOrder: 'asc' },
+                    'price-desc': { sortBy: 'variants.price', sortOrder: 'desc' },
+                    'date-asc': { sortBy: 'createdAt', sortOrder: 'asc' },
+                    'date-desc': { sortBy: 'createdAt', sortOrder: 'desc' },
+                    'alpha-asc': { sortBy: 'title', sortOrder: 'asc' },
+                    'alpha-desc': { sortBy: 'title', sortOrder: 'desc' },
+                };
+
+                const sortConfig = sortMapping[sort as string];
+                if (sortConfig) {
+                    pagination.sortBy = sortConfig.sortBy;
+                    pagination.sortOrder = sortConfig.sortOrder;
+                }
+            }
 
             const { products, totalCount } = await getProductsByCollection(
                 collection.id,
@@ -296,7 +315,7 @@ export const getProductsByCollectionHandleEndpoint = catchAsync(
                     collectionHandle: collection.handle,
                     productsCount: products.length,
                     totalCount,
-                    totalPages: Math.ceil(totalCount / pagination.limit),
+                    totalPages: Math.ceil(totalCount / pagination.limit!),
                     currentPage: pagination.page,
                 },
             });

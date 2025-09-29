@@ -205,7 +205,7 @@ export async function getProductsByCollection(
 
     if (filters.tags && filters.tags.length > 0) {
         where.tags = {
-            hasSome: filters.tags, // Prisma array operator
+            hasSome: filters.tags,
         };
     }
 
@@ -227,19 +227,55 @@ export async function getProductsByCollection(
         ];
     }
 
+    // Handle price sorting differently since it's in variants
+    let orderBy: any = {};
+
+    if (sortBy === 'variants.price') {
+        // For price sorting, we need a different approach
+        // Option 1: Use aggregate to get min price and sort by that
+        // Option 2: Use include with variants and sort in memory (less efficient)
+        // For now, let's use a simple approach - sort by the first variant's price
+        orderBy = {
+            variants: {
+                _count: sortOrder,
+            },
+        };
+    } else {
+        orderBy = { [sortBy]: sortOrder };
+    }
+
     const [products, totalCount] = await Promise.all([
         prisma.product.findMany({
             where,
             include: {
-                variants: { orderBy: { position: 'asc' } },
+                variants: {
+                    orderBy: { position: 'asc' },
+                    // For price sorting, we might need to include price in the variant selection
+                },
                 images: { orderBy: { position: 'asc' } },
             },
             skip,
             take: limit,
-            orderBy: { [sortBy]: sortOrder },
+            orderBy,
         }),
         prisma.product.count({ where }),
     ]);
+
+    // If we're sorting by price and did the simple approach above,
+    // we might need to do additional sorting in memory
+    if (sortBy === 'variants.price') {
+        products.sort((a, b) => {
+            // Ensure prices are numbers by parsing them
+            const priceA = parseFloat(a.variants[0]?.price?.toString() || '0');
+            const priceB = parseFloat(b.variants[0]?.price?.toString() || '0');
+
+            if (sortOrder === 'asc') {
+                return priceA - priceB;
+            } else {
+                return priceB - priceA;
+            }
+        });
+    }
 
     return {
         products,

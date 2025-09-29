@@ -126,7 +126,7 @@ router.get('/:id/products', productController.getProductsByCollectionEndpoint);
  * /collections/handle/{handle}/products:
  *   get:
  *     summary: Get products by collection handle
- *     description: Retrieve all published products in a specific collection by its handle with pagination support
+ *     description: Retrieve all published products in a specific collection by its handle with pagination and sorting support
  *     tags: [Collections]
  *     parameters:
  *       - in: path
@@ -150,6 +150,21 @@ router.get('/:id/products', productController.getProductsByCollectionEndpoint);
  *           maximum: 100
  *           default: 20
  *         description: Number of products to return per page
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           enum: [manual, price-asc, price-desc, date-asc, date-desc, alpha-asc, alpha-desc]
+ *           default: manual
+ *         description: |
+ *           Sort products by various criteria:
+ *           - manual: Featured products (default)
+ *           - price-asc: Price low to high
+ *           - price-desc: Price high to low
+ *           - date-asc: Date old to new
+ *           - date-desc: Date new to old
+ *           - alpha-asc: Alphabetically A to Z
+ *           - alpha-desc: Alphabetically Z to A
  *     responses:
  *       200:
  *         description: Products retrieved successfully
@@ -177,12 +192,15 @@ router.get('/:id/products', productController.getProductsByCollectionEndpoint);
  *                     productsCount:
  *                       type: integer
  *                       example: 15
+ *                     totalCount:
+ *                       type: integer
+ *                       example: 45
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 3
  *                     currentPage:
  *                       type: integer
  *                       example: 1
- *                     totalPages:
- *                       type: integer
- *                       example: 2
  *       400:
  *         description: Invalid collection handle
  *       404:
