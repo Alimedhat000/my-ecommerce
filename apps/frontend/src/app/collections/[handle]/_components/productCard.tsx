@@ -1,6 +1,6 @@
+import React, { useState, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import React from 'react';
 import { Product } from '@/types/collection';
 import ProductBadge from './productBadge';
 import VariantSwatches from './variantSwatches';
@@ -9,8 +9,45 @@ interface ProductCardProps {
   product: Product;
 }
 
+const getImageUrl = (src: string) => {
+  return src.includes('?') ? `${src}&width=800` : `${src}?width=800`;
+};
+
+// Preload a single image
+const preloadImage = (src: string): Promise<void> => {
+  return new Promise((resolve) => {
+    const img = new window.Image();
+    img.src = getImageUrl(src);
+    img.onload = () => resolve();
+    img.onerror = () => resolve(); // Resolve even on error to avoid blocking
+  });
+};
+
+// Preload multiple images
+const preloadImages = (imageUrls: string[]): Promise<void[]> => {
+  return Promise.all(imageUrls.map((url) => preloadImage(url)));
+};
+
 export default function ProductCard({ product }: ProductCardProps) {
-  const primaryImage = product.images[0];
+  const getInitialImage = () => {
+    const firstAvailableVariant = product.variants.find((v) => v.available);
+    if (firstAvailableVariant) {
+      const variantImage = product.images.find((img) =>
+        img.variantIds.includes(firstAvailableVariant.shopifyId)
+      );
+      if (variantImage) return variantImage;
+    }
+    return product.images[0];
+  };
+
+  const [selectedImage, setSelectedImage] = useState(getInitialImage());
+  const [displayedImage, setDisplayedImage] = useState(selectedImage);
+  const [nextImage, setNextImage] = useState<typeof selectedImage | null>(null);
+  const [fade, setFade] = useState(false);
+  const [preloadedImages, setPreloadedImages] = useState<Set<string>>(
+    new Set([selectedImage.src])
+  );
+
   const price = product.variants[0].price;
   const compareAtPrice = product.variants[0].compareAtPrice;
   const hasDiscount = compareAtPrice && compareAtPrice > price;
@@ -20,30 +57,80 @@ export default function ProductCard({ product }: ProductCardProps) {
     const discountPercent = Math.round(
       ((compareAtPrice! - price) / compareAtPrice!) * 100
     );
-    badges.push({
-      text: `Save ${discountPercent}%`,
-      type: 'sale',
-    });
+    badges.push({ text: `Save ${discountPercent}%`, type: 'sale' });
   }
-
   if (product.tags.includes('Unisex'))
     badges.push({ text: 'Unisex', type: 'category' });
-
   if (product.tags.includes('Buy 2 Get 1'))
     badges.push({ text: 'Buy 2 Get 1', type: 'feature' });
-
-  const allVariantsUnavailable = product.variants.every(
-    (variant) => !variant.available
-  );
-  if (allVariantsUnavailable) {
+  if (product.tags.includes('Buy 1 Get 1'))
+    badges.push({ text: 'Buy 1 Get 1', type: 'feature' });
+  if (product.variants.every((v) => !v.available))
     badges.push({ text: 'Sold Out', type: 'soldout' });
-  }
 
   const leftBadges = badges.filter(
     (b) => b.type === 'sale' || b.type === 'soldout'
   );
   const rightBadges = badges.filter(
     (b) => b.type !== 'sale' && b.type !== 'soldout'
+  );
+
+  const handleSwatchClick = useCallback(
+    async (img: typeof selectedImage) => {
+      if (img.src === displayedImage.src) return;
+
+      setNextImage(img);
+
+      // Create a map of variant IDs to their primary images
+      const variantImageMap = new Map();
+      product.variants.forEach((variant) => {
+        const variantImage = product.images.find((img) =>
+          img.variantIds.includes(variant.shopifyId)
+        );
+        if (variantImage) {
+          variantImageMap.set(variant.shopifyId, variantImage.src);
+        }
+      });
+
+      // Get unique variant image URLs
+      const uniqueVariantImageUrls = Array.from(variantImageMap.values());
+
+      // Filter out already preloaded images
+      const imagesToPreload = uniqueVariantImageUrls.filter(
+        (src) => !preloadedImages.has(src)
+      );
+
+      // Preload current image first if needed
+      if (!preloadedImages.has(img.src)) {
+        await preloadImage(img.src);
+        setPreloadedImages((prev) => new Set([...prev, img.src]));
+      }
+
+      // Preload other variant images in the background
+      const otherImagesToPreload = imagesToPreload.filter(
+        (src) => src !== img.src
+      );
+      if (otherImagesToPreload.length > 0) {
+        preloadImages(otherImagesToPreload).then(() => {
+          setPreloadedImages(
+            (prev) => new Set([...prev, ...otherImagesToPreload])
+          );
+        });
+      }
+
+      // Use a small timeout to ensure the DOM updates before starting the fade
+      requestAnimationFrame(() => {
+        setFade(true);
+
+        setTimeout(() => {
+          setDisplayedImage(img);
+          setSelectedImage(img);
+          setNextImage(null);
+          setFade(false);
+        }, 300); // transition duration
+      });
+    },
+    [displayedImage.src, preloadedImages, product.images, product.variants]
   );
 
   return (
@@ -56,7 +143,6 @@ export default function ProductCard({ product }: ProductCardProps) {
           ))}
         </div>
       )}
-
       {/* Right-side Badges */}
       {rightBadges.length > 0 && (
         <div className="absolute top-3 right-3 z-10 flex flex-col items-end space-y-2">
@@ -66,30 +152,51 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
       )}
 
-      {/* Product Image + Quick Add */}
+      {/* Image */}
       <div className="group relative aspect-[65/100] w-full overflow-hidden rounded-t-md">
         <Link
           href={`/products/${product.handle}`}
           className="relative block h-full w-full"
         >
-          <Image
-            src={primaryImage.src}
-            alt={primaryImage.alt ?? product.title}
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-          />
+          <div className="relative h-full w-full">
+            {/* Displayed image */}
+            <Image
+              key={displayedImage.src}
+              src={getImageUrl(displayedImage.src)}
+              alt={displayedImage.alt ?? product.title}
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              className={`object-cover transition-opacity duration-300 ${
+                fade ? 'opacity-0' : 'opacity-100'
+              }`}
+              priority={true}
+            />
+            {/* Next image (fades in) */}
+            {nextImage && (
+              <Image
+                key={nextImage.src}
+                src={getImageUrl(nextImage.src)}
+                alt={nextImage.alt ?? product.title}
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                className={`absolute top-0 left-0 object-cover transition-opacity duration-300 ${
+                  fade ? 'opacity-100' : 'opacity-0'
+                }`}
+                priority={true}
+              />
+            )}
+          </div>
         </Link>
-        <button className="absolute right-3 bottom-3 translate-y-2 transform rounded-full bg-black px-4 py-2 text-sm font-semibold text-white opacity-0 shadow-lg transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 hover:bg-gray-800">
+        <button className="absolute right-3 bottom-3 translate-y-2 transform rounded-full bg-black px-4 py-2 text-sm font-semibold text-white opacity-0 shadow-lg transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 hover:opacity-80">
           + Quick add
         </button>
       </div>
 
-      {/* Info Section */}
+      {/* Info */}
       <div className="grid grid-rows-[auto_1fr_auto] space-y-3 p-4">
         {/* Vendor */}
         {product.vendor && (
-          <div className="text-sm text-gray-500">{product.vendor}</div>
+          <div className="text-muted-foreground text-sm">{product.vendor}</div>
         )}
 
         {/* Title & Pricing */}
@@ -109,8 +216,12 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
         </div>
 
-        {/* Variant Swatches */}
-        <VariantSwatches variants={product.variants} />
+        <VariantSwatches
+          variants={product.variants}
+          images={product.images}
+          selectedImage={selectedImage}
+          onSwatchClick={handleSwatchClick}
+        />
       </div>
     </article>
   );

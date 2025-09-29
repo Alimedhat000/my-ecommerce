@@ -1,55 +1,60 @@
 import React from 'react';
-import { ProductVariant } from '@/types/collection';
+import { ProductVariant, ProductImage } from '@/types/collection';
 import { mapNameToHex } from '@/utils/mapNameToHex';
 
 interface VariantSwatchesProps {
   variants: ProductVariant[];
+  images: ProductImage[];
+  selectedImage: ProductImage;
   maxVisible?: number;
+  onSwatchClick: (image: ProductImage) => void;
 }
-
-// Extend ProductVariant to include colorHex
-type VariantWithColor = ProductVariant & { colorHex: string };
 
 export default function VariantSwatches({
   variants,
+  images,
+  selectedImage,
   maxVisible = 4,
+  onSwatchClick,
 }: VariantSwatchesProps) {
   const availableVariants = variants.filter((v) => v.available);
-
-  // if none are available, fallback to first variant
   const variantsToUse =
     availableVariants.length > 0 ? availableVariants : [variants[0]];
 
-  // map to include colorHex and remove duplicates
-  const colorVariants = variantsToUse
-    .map((variant) => {
-      const colorHex = variant.option1
-        ? (mapNameToHex(variant.option1) ?? '#000')
-        : '#000';
-      return { ...variant, colorHex } as VariantWithColor;
-    })
-    .filter((variant) => variant.colorHex)
-    .reduce((uniqueMap, variant) => {
-      if (!uniqueMap.has(variant.colorHex)) {
-        uniqueMap.set(variant.colorHex, variant);
-      }
-      return uniqueMap;
-    }, new Map<string, VariantWithColor>());
+  const colorVariants = Array.from(
+    new Map(
+      variantsToUse.map((v) => {
+        const colorHex = v.option1
+          ? (mapNameToHex(v.option1) ?? '#000')
+          : '#000';
+        return [colorHex, { ...v, colorHex }];
+      })
+    ).values()
+  );
 
-  const uniqueVariants = Array.from(colorVariants.values());
-  const visibleVariants = uniqueVariants.slice(0, maxVisible);
-  const remainingCount = uniqueVariants.length - maxVisible;
+  const visibleVariants = colorVariants.slice(0, maxVisible);
+  const remainingCount = colorVariants.length - maxVisible;
+
+  const handleClick = (variant: ProductVariant & { colorHex: string }) => {
+    const variantImage = images.find((img) =>
+      img.variantIds.includes(variant.shopifyId)
+    );
+    if (variantImage) onSwatchClick(variantImage);
+  };
 
   return (
     <div className="flex items-center space-x-2">
-      {visibleVariants.map((variant, index) => (
+      {visibleVariants.map((variant) => (
         <span
           key={variant.id}
-          className={`h-5 w-5 rounded-full border ${
-            !variant.available ? 'unavailable_color' : ''
-          } ${index === 0 ? 'selected_color' : ''}`}
+          className={`border-muted-foreground h-4 w-4 cursor-pointer rounded-full border-[0.5px] ${
+            selectedImage.variantIds.includes(variant.shopifyId)
+              ? 'ring-2 ring-black ring-offset-2'
+              : ''
+          }`}
           style={{ backgroundColor: variant.colorHex }}
           title={variant.option1 || variant.title}
+          onClick={() => handleClick(variant)}
         />
       ))}
       {remainingCount > 0 && (
