@@ -14,6 +14,7 @@ const commonAliases: Record<string, string> = {
   'off white': '#FAF9F6',
   green: '#327064',
   'jade green': '#00BB77',
+  café: '#855b5b',
 };
 
 function levenshtein(a: string, b: string): number {

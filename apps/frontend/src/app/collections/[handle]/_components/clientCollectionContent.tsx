@@ -35,11 +35,7 @@ export default function ClientCollectionContent({
   const maxPrice = searchParams.get('maxPrice');
   const inStock = searchParams.get('inStock');
 
-  const {
-    data: fetchedProducts,
-    isLoading,
-    isFetching,
-  } = useQuery({
+  const { data: fetchedProducts } = useQuery({
     queryKey: [
       'products',
       collectionHandle,
@@ -75,6 +71,8 @@ export default function ClientCollectionContent({
       );
       return res;
     },
+    placeholderData: (previousData) => previousData,
+    enabled: !!collectionHandle,
   });
 
   const router = useRouter();
@@ -184,10 +182,7 @@ export default function ClientCollectionContent({
       <Filters collectionHandle={collectionHandle} />
 
       {/* Results */}
-      <ProductGrid
-        products={fetchedProducts?.data ?? []}
-        loading={isFetching && !isLoading}
-      />
+      <ProductGrid products={fetchedProducts?.data ?? []} loading={false} />
 
       {/* Pagination */}
       <Pagination
