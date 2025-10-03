@@ -171,6 +171,11 @@
   --sidebar-ring: oklch(0.551 0.027 264.364);
 }
 
+html,
+body {
+  min-height: 100vh;
+}
+
 .header {
   font-weight: 600;
   font-family: var(--font-heading);
@@ -181,6 +186,11 @@
 main {
   font-family: var(--font-body);
   letter-spacing: var(--body-letter-spacing);
+  --max-width: 1900px;
+
+  margin-left: auto;
+  margin-right: auto;
+  max-width: var(--max-width);
 }
 
 @layer base {

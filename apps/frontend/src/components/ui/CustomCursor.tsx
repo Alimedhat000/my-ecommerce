@@ -33,7 +33,7 @@ export const CustomCursor: React.FC<CustomCursorProps> = ({
       }}
     >
       <div
-        className="flex items-center justify-center rounded-full shadow-lg backdrop-blur-sm"
+        className="flex items-center justify-center rounded-full"
         style={{
           width: `${size}px`,
           height: `${size}px`,
