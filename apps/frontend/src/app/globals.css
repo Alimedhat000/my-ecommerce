@@ -4,11 +4,23 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  --text-5xl: 3rem;
+  --text-6xl: 3.75rem;
+
   /* Breakpoints */
   --breakpoint-xs: 480px;
   --breakpoint-sm: 700px;
   --breakpoint-md: 900px;
-  --breakpoint-lg: 1150px;
+  --breakpoint-lg: 1000px;
+  --breakpoint-xl: 1150px;
   --breakpoint-2xl: 1400px;
 
   /* TYPOGRAPHY */

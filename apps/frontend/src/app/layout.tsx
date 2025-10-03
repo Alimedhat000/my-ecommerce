@@ -30,7 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${oswald.variable} ${robotoCondensed.variable} ${firaCode.variable} bg-muted h-full w-full antialiased`}
+        className={`${oswald.variable} ${robotoCondensed.variable} ${firaCode.variable} bg-muted font-body h-full w-full antialiased`}
       >
         <Providers>
           <HeaderWrapper />
