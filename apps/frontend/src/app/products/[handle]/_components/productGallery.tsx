@@ -1,9 +1,11 @@
 'use client';
 
 import Image from 'next/image';
+import { useState } from 'react';
 import { useCustomCursor } from '@/hooks/useCustomCursor';
 import { CustomCursor } from '@/components/ui/CustomCursor';
 import { useClickNavigation } from '@/hooks/useClickNavigation';
+import { X, ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
 
 interface ProductGalleryProps {
   images: string[];
@@ -11,6 +13,27 @@ interface ProductGalleryProps {
 }
 
 export default function ProductGallery({ images, title }: ProductGalleryProps) {
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [zoomIndex, setZoomIndex] = useState(0);
+  const [isMaxZoomed, setIsMaxZoomed] = useState(false);
+
+  const [zoomOrigin, setZoomOrigin] = useState({ x: 0.5, y: 0.5 });
+
+  const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
+    if (!isMaxZoomed) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
+
+      // Clamp values to prevent zooming outside image bounds
+      const clampedX = Math.max(0, Math.min(1, x));
+      const clampedY = Math.max(0, Math.min(1, y));
+
+      setZoomOrigin({ x: clampedX, y: clampedY });
+    }
+    toggleMaxZoom();
+  };
+
   const {
     currentIndex,
     nextItem,
@@ -44,6 +67,43 @@ export default function ProductGallery({ images, title }: ProductGalleryProps) {
     navHandleMouseMove(e);
   };
 
+  const openZoom = () => {
+    setZoomIndex(currentIndex);
+    setIsZoomed(true);
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeZoom = () => {
+    setIsZoomed(false);
+    setIsMaxZoomed(false);
+    document.body.style.overflow = '';
+  };
+
+  const nextZoomImage = () => {
+    setZoomIndex((prev) => (prev + 1) % images.length);
+    setIsMaxZoomed(false);
+  };
+
+  const prevZoomImage = () => {
+    setZoomIndex((prev) => (prev - 1 + images.length) % images.length);
+    setIsMaxZoomed(false);
+  };
+
+  const toggleMaxZoom = () => {
+    setIsMaxZoomed((prev) => !prev);
+  };
+
+  // Handle keyboard navigation
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      closeZoom();
+    } else if (e.key === 'ArrowLeft') {
+      prevZoomImage();
+    } else if (e.key === 'ArrowRight') {
+      nextZoomImage();
+    }
+  };
+
   return (
     <>
       <CustomCursor
@@ -56,8 +116,10 @@ export default function ProductGallery({ images, title }: ProductGalleryProps) {
         className=""
         cursorSide={cursorSide}
       />
-
-      <div className="grid grid-cols-1 gap-x-10 gap-y-6 xl:grid-cols-[auto_minmax(0,1fr)]">
+      <div
+        className="grid grid-cols-1 gap-x-10 gap-y-6 xl:grid-cols-[auto_minmax(0,1fr)]"
+        onKeyDown={handleKeyDown}
+      >
         {/* Thumbnails */}
         <div className="relative order-2">
           <div className="from-background pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r to-transparent xl:hidden" />
@@ -99,7 +161,7 @@ export default function ProductGallery({ images, title }: ProductGalleryProps) {
           onMouseLeave={handleMouseLeave}
           onMouseMove={handleMouseMove}
         >
-          <div className="overflow-hidden rounded-2xl">
+          <div className="relative overflow-hidden rounded-2xl">
             <div
               className="flex transition-transform duration-500 ease-in-out"
               style={{ transform: `translateX(-${currentIndex * 100}%)` }}
@@ -119,9 +181,87 @@ export default function ProductGallery({ images, title }: ProductGalleryProps) {
                 </div>
               ))}
             </div>
+            {/* Zoom Button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                openZoom();
+              }}
+              onMouseEnter={(e) => {
+                e.stopPropagation();
+                handleMouseLeave();
+              }}
+              onMouseLeave={(e) => {
+                e.stopPropagation();
+              }}
+              className="bg-muted absolute right-6 bottom-10 z-20 cursor-pointer rounded-full p-5 transition-all"
+              aria-label="Zoom image"
+            >
+              <ZoomIn className="h-5 w-5 text-gray-700" />
+            </button>
           </div>
         </div>
       </div>
+      {/* Zoom Overlay */}
+      {isZoomed && (
+        <div
+          className="bg-muted fixed inset-0 z-50 flex items-center justify-center overflow-hidden"
+          onKeyDown={handleKeyDown}
+          tabIndex={0}
+          autoFocus
+        >
+          {/* Close Button */}
+          <button
+            onClick={closeZoom}
+            className="border-ring absolute top-5 right-12 z-10 rounded-full border bg-white p-5 transition-all hover:bg-white/90"
+            aria-label="Close zoom"
+          >
+            <X className="h-6 w-6 text-black" />
+          </button>
+
+          {/* Zoomed Image */}
+          <div
+            className={`relative flex h-full w-full items-center justify-center overflow-hidden`}
+          >
+            <Image
+              src={images[zoomIndex]}
+              alt={`${title} zoomed image ${zoomIndex + 1}`}
+              width={1920}
+              height={1080}
+              onClick={handleImageClick}
+              className={`max-h-full max-w-full object-contain transition-transform duration-500 ease-in-out ${isMaxZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
+              style={{
+                transform: isMaxZoomed ? 'scale(2)' : 'scale(1)',
+                transformOrigin: `${zoomOrigin.x * 100}% ${zoomOrigin.y * 100}%`,
+              }}
+              priority
+            />
+          </div>
+
+          {/* Navigation Bar with Counter */}
+          <div className="absolute bottom-8 left-1/2 flex -translate-x-1/2 items-center gap-4 rounded-full bg-white px-4 py-2 shadow-lg">
+            <button
+              onClick={prevZoomImage}
+              className="p-1 transition-all hover:scale-110"
+              aria-label="Previous image"
+            >
+              <ChevronLeft className="h-5 w-5 text-gray-700" />
+            </button>
+
+            <span className="min-w-[4rem] text-center text-sm font-medium text-gray-700">
+              {zoomIndex + 1} / {images.length}
+            </span>
+
+            <button
+              onClick={nextZoomImage}
+              className="p0 transition-all hover:scale-110"
+              aria-label="Next image"
+            >
+              <ChevronRight className="h-4 w-5 text-gray-700" />
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }
