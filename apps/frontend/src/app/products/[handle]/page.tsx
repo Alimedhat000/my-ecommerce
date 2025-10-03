@@ -87,8 +87,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           rel="preload"
           as="image"
           href={img}
-          // @ts-expect-error because im lazy
-          fetchpriority={idx === 0 ? 'high' : 'low'}
+          fetchPriority={idx === 0 ? 'high' : 'low'}
         />
       ))}
 
