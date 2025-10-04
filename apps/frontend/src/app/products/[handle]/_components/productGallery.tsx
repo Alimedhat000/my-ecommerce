@@ -121,24 +121,25 @@ export default function ProductGallery({ images, title }: ProductGalleryProps) {
         onKeyDown={handleKeyDown}
       >
         {/* Thumbnails */}
-        <div className="relative order-2">
+        <div className="relative order-2 xl:max-h-[600px]">
           <div className="from-background pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r to-transparent xl:hidden" />
           <div className="from-background pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l to-transparent xl:hidden" />
           <div className="[:has(>div[data-scrollable]):not(:hover)>&] from-muted pointer-events-none absolute inset-x-0 top-0 z-10 hidden h-15 bg-gradient-to-b to-transparent xl:block" />
           <div className="[:has(>div[data-scrollable]):not(:hover)>&] from-muted pointer-events-none absolute inset-x-0 bottom-0 z-10 hidden h-15 bg-gradient-to-t to-transparent xl:block" />
 
           <div
-            className="grid max-h-[700px] auto-cols-[64px] grid-flow-col gap-[0.625rem] overflow-auto [-ms-overflow-style:none] [scrollbar-width:none] xl:grid-flow-row [&::-webkit-scrollbar]:hidden"
+            className="grid max-h-[600px] auto-cols-[64px] grid-flow-col gap-[0.625rem] overflow-auto [-ms-overflow-style:none] [scrollbar-width:none] xl:grid-flow-row [&::-webkit-scrollbar]:hidden"
             data-scrollable
           >
             {images.map((image, index) => (
               <button
                 key={index}
                 onClick={() => goToItem(index)}
-                className={`relative cursor-pointer overflow-hidden transition-opacity ${currentIndex === index
+                className={`relative cursor-pointer overflow-hidden transition-opacity ${
+                  currentIndex === index
                     ? 'after:absolute after:bottom-0 after:left-0 after:block after:h-[2px] after:w-full after:rounded-2xl after:bg-black after:content-[""]'
                     : ''
-                  }`}
+                }`}
               >
                 <Image
                   src={image}
