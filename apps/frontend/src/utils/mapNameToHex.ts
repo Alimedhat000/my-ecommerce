@@ -1,7 +1,7 @@
 import ntc from 'ntcjs';
 
 /**
- * Compute Levenshtein distance between two strings
+ * Common color aliases for better matching
  */
 const commonAliases: Record<string, string> = {
   'ice grey': '#D3D3D3',
@@ -17,14 +17,15 @@ const commonAliases: Record<string, string> = {
   café: '#855b5b',
 };
 
+/**
+ * Compute Levenshtein distance between two strings
+ */
 function levenshtein(a: string, b: string): number {
   const dp = Array.from({ length: a.length + 1 }, () =>
     new Array(b.length + 1).fill(0)
   );
-
   for (let i = 0; i <= a.length; i++) dp[i][0] = i;
   for (let j = 0; j <= b.length; j++) dp[0][j] = j;
-
   for (let i = 1; i <= a.length; i++) {
     for (let j = 1; j <= b.length; j++) {
       if (a[i - 1] === b[j - 1]) {
@@ -34,13 +35,15 @@ function levenshtein(a: string, b: string): number {
       }
     }
   }
-
   return dp[a.length][b.length];
 }
 
+/**
+ * Maps a color name to its hex value
+ * Uses multiple strategies: exact match, common aliases, substring match, and fuzzy matching
+ */
 export function mapNameToHex(name: string): string | null {
   if (!name) return null;
-
   const lowerName = name.toLowerCase();
 
   // 0. Check common mistakes first

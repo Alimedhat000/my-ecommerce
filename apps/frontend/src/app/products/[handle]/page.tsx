@@ -3,6 +3,10 @@ import ProductGallery from './_components/productGallery';
 import ProductInfo from './_components/productInfo';
 import ProductReviews from './_components/productReviews';
 import ProductSuggestions from './_components/productSuggestions';
+import { api } from '@/api/client';
+import { ProductImage } from '@/types/collection';
+import Image from 'next/image';
+import React from 'react';
 
 interface ProductPageProps {
   params: { handle: string };
@@ -12,93 +16,74 @@ interface ProductPageProps {
 export async function generateMetadata({
   params,
 }: ProductPageProps): Promise<Metadata> {
-  // In a real app, fetch product data here
-  const productName = 'Salty Studios Limeted Polo';
-  const productDescription = 'Premium quality polo shirt from Salty Studios';
-  const productImage =
-    'https://gonative.eg/cdn/shop/files/016A0432.jpg?v=1752142111&width=1200';
+  const handle = await params;
+  const res = await api.get(`/products/handle/${handle.handle}`);
+  const product = res.data.data;
 
   return {
-    title: `${productName}`,
-    description: productDescription,
+    title: product.title,
+    description:
+      product.seoDescription ||
+      product.bodyHtml ||
+      `Premium quality ${product.title}`,
     openGraph: {
-      title: productName,
-      description: productDescription,
-      images: [productImage],
+      title: product.title,
+      description:
+        product.seoDescription ||
+        product.bodyHtml ||
+        `Premium quality ${product.title}`,
+      images: product.images.length > 0 ? [product.images[0].src] : [],
     },
     twitter: {
       card: 'summary_large_image',
-      title: productName,
-      description: productDescription,
-      images: [productImage],
+      title: product.title,
+      description:
+        product.seoDescription ||
+        product.bodyHtml ||
+        `Premium quality ${product.title}`,
+      images: product.images.length > 0 ? [product.images[0].src] : [],
     },
   };
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
-  // In a real app, fetch product data here based on params.handle
-  const productData = {
-    vendor: 'Sally',
-    handle: params.handle,
-    title: 'SALTY STUDIOS LIMITED POLO',
-    price: 558.6,
-    compareAtPrice: 799.0,
-    images: [
-      'https://gonative.eg/cdn/shop/files/016A0432.jpg?v=1752142111&width=1200',
-      'https://gonative.eg/cdn/shop/files/016A0433.jpg?v=1752142111&width=1200',
-      'https://gonative.eg/cdn/shop/files/016A0434.jpg?v=1752142111&width=1200',
-      'https://gonative.eg/cdn/shop/files/016A0434.jpg?v=1752142111&width=1200',
-      'https://gonative.eg/cdn/shop/files/016A0434.jpg?v=1752142111&width=1200',
-      'https://gonative.eg/cdn/shop/files/016A0434.jpg?v=1752142111&width=1200',
-      'https://gonative.eg/cdn/shop/files/016A0432.jpg?v=1752142111&width=1200',
-      'https://gonative.eg/cdn/shop/files/016A0433.jpg?v=1752142111&width=1200',
-      'https://gonative.eg/cdn/shop/files/016A0434.jpg?v=1752142111&width=1200',
-      'https://gonative.eg/cdn/shop/files/016A0434.jpg?v=1752142111&width=1200',
-      'https://gonative.eg/cdn/shop/files/016A0434.jpg?v=1752142111&width=1200',
-      'https://gonative.eg/cdn/shop/files/016A0434.jpg?v=1752142111&width=1200',
-      'https://gonative.eg/cdn/shop/files/016A0433.jpg?v=1752142111&width=1200',
-      'https://gonative.eg/cdn/shop/files/016A0434.jpg?v=1752142111&width=1200',
-      'https://gonative.eg/cdn/shop/files/016A0434.jpg?v=1752142111&width=1200',
-      'https://gonative.eg/cdn/shop/files/016A0434.jpg?v=1752142111&width=1200',
-      'https://gonative.eg/cdn/shop/files/016A0434.jpg?v=1752142111&width=1200',
-    ],
-    colors: [
-      { name: 'Grey', value: 'bg-gray-300' },
-      { name: 'Yellow', value: 'bg-yellow-200' },
-      { name: 'Black', value: 'bg-black' },
-    ],
-    sizes: ['S', 'M', 'L', 'XL'],
-    completeTheOutfit: {
-      title: '9004 Denim',
-      price: 1200.0,
-      image: '/placeholder-outfit.jpg',
-    },
-  };
-
-  // Preload critical images
-  const preloadImages = productData.images.slice(0, 3);
+  const handle = await params;
+  const res = await api.get(`/products/handle/${handle.handle}`);
+  const product = res.data.data;
 
   return (
     <>
-      {/* Preload critical images for better performance */}
-      {preloadImages.map((img, idx) => (
-        <link
-          key={idx}
-          rel="preload"
-          as="image"
-          href={img}
-          fetchPriority={idx === 0 ? 'high' : 'low'}
-        />
-      ))}
+      <div style={{ display: 'none' }}>
+        {product.images.slice(0, 3).map((img: ProductImage, index: number) => (
+          <div key={img.id}>
+            {/* Preload thumbnail size */}
+            <Image
+              src={img.src}
+              alt="preload thumbnail"
+              width={64}
+              height={85}
+              priority={index === 0}
+            />
+            {/* Preload gallery size */}
+            <Image
+              src={img.src}
+              alt="preload gallery"
+              width={900}
+              height={1200}
+              priority={index === 0}
+            />
+          </div>
+        ))}
+      </div>
 
       <main className="mb-20">
         {/* Product Section */}
         <section className="grid-rows-auto grid grid-cols-1 items-start gap-x-12 gap-y-10 p-12 lg:grid-cols-2">
           <ProductGallery
-            images={productData.images}
-            title={productData.title}
+            images={product.images.map((img: ProductImage) => img.src)}
+            title={product.title}
           />
-          <ProductInfo product={productData} />
+          <ProductInfo product={product} />
         </section>
 
         <ProductReviews />

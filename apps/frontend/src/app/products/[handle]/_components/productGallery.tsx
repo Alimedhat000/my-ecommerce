@@ -16,7 +16,6 @@ export default function ProductGallery({ images, title }: ProductGalleryProps) {
   const [isZoomed, setIsZoomed] = useState(false);
   const [zoomIndex, setZoomIndex] = useState(0);
   const [isMaxZoomed, setIsMaxZoomed] = useState(false);
-
   const [zoomOrigin, setZoomOrigin] = useState({ x: 0.5, y: 0.5 });
 
   const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
@@ -147,7 +146,7 @@ export default function ProductGallery({ images, title }: ProductGalleryProps) {
                   width={64}
                   height={85}
                   className="mb-1 rounded-md object-cover"
-                  loading={index < 4 ? 'eager' : 'lazy'}
+                  priority
                 />
               </button>
             ))}
@@ -175,8 +174,7 @@ export default function ProductGallery({ images, title }: ProductGalleryProps) {
                     width={900}
                     height={1200}
                     className="h-full w-full object-cover"
-                    priority={index === 0}
-                    loading={index === 0 ? 'eager' : 'lazy'}
+                    priority
                     sizes="(max-width: 1024px) 100vw, 50vw"
                   />
                 </div>
@@ -227,8 +225,8 @@ export default function ProductGallery({ images, title }: ProductGalleryProps) {
             <Image
               src={images[zoomIndex]}
               alt={`${title} zoomed image ${zoomIndex + 1}`}
-              width={1920}
-              height={1080}
+              width={900}
+              height={1200}
               onClick={handleImageClick}
               className={`max-h-full max-w-full object-contain transition-transform duration-500 ease-in-out ${isMaxZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
               style={{
