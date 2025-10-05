@@ -58,7 +58,6 @@ export default function ProductGallery({
   const {
     nextItem,
     prevItem,
-    goToItem,
     isCursorVisible,
     cursorPosition,
     isHovering,
@@ -67,8 +66,8 @@ export default function ProductGallery({
     handleMouseMove: cursorHandleMouseMove,
   } = useCustomCursor({
     totalItems: images.length,
-    initialIndex: currentIndex,
-    onIndexChange: handleIndexChange, // Pass the callback to update index
+    currentIndex: currentIndex, // Pass current index
+    onIndexChange: handleIndexChange,
   });
 
   const {
@@ -168,10 +167,11 @@ export default function ProductGallery({
               <button
                 key={index}
                 onClick={() => handleGoToItem(index)}
-                className={`relative cursor-pointer overflow-hidden transition-opacity ${currentIndex === index
+                className={`relative cursor-pointer overflow-hidden transition-opacity ${
+                  currentIndex === index
                     ? 'after:absolute after:bottom-0 after:left-0 after:block after:h-[2px] after:w-full after:rounded-2xl after:bg-black after:content-[""]'
                     : ''
-                  }`}
+                }`}
               >
                 <Image
                   src={image}

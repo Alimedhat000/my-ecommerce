@@ -49,7 +49,6 @@ export function useClickNavigation({
       const width = rect.width;
       const leftZone = (width * leftZonePercentage) / 100;
       const rightZone = (width * rightZonePercentage) / 100;
-
       if (clickX < leftZone) {
         prevItem();
       } else if (clickX > rightZone) {

@@ -2,14 +2,15 @@ import { useState, useEffect, useCallback } from 'react';
 
 interface UseCustomCursorProps {
   totalItems: number;
-  initialIndex?: number;
+  currentIndex: number;
+  onIndexChange: (index: number) => void;
 }
 
 export function useCustomCursor({
   totalItems,
-  initialIndex = 0,
+  currentIndex,
+  onIndexChange,
 }: UseCustomCursorProps) {
-  const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
   const [isCursorVisible, setIsCursorVisible] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
@@ -24,25 +25,24 @@ export function useCustomCursor({
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
+  // Fixed: Calculate next/prev based on currentIndex
   const nextItem = useCallback(() => {
-    setCurrentIndex((prevIndex) =>
-      prevIndex === totalItems - 1 ? 0 : prevIndex + 1
-    );
-  }, [totalItems]);
+    const newIndex = currentIndex === totalItems - 1 ? 0 : currentIndex + 1;
+    onIndexChange(newIndex);
+  }, [totalItems, currentIndex, onIndexChange]);
 
   const prevItem = useCallback(() => {
-    setCurrentIndex((prevIndex) =>
-      prevIndex === 0 ? totalItems - 1 : prevIndex - 1
-    );
-  }, [totalItems]);
+    const newIndex = currentIndex === 0 ? totalItems - 1 : currentIndex - 1;
+    onIndexChange(newIndex);
+  }, [totalItems, currentIndex, onIndexChange]);
 
   const goToItem = useCallback(
     (index: number) => {
       if (index >= 0 && index < totalItems) {
-        setCurrentIndex(index);
+        onIndexChange(index);
       }
     },
-    [totalItems]
+    [totalItems, onIndexChange]
   );
 
   const handleMouseEnter = useCallback(() => {
@@ -62,8 +62,6 @@ export function useCustomCursor({
   }, [isCursorVisible]);
 
   return {
-    currentIndex,
-    setCurrentIndex,
     nextItem,
     prevItem,
     goToItem,
