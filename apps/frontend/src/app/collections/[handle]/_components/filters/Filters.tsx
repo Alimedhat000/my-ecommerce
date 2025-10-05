@@ -1,8 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
 import { Accordion } from '@/components/ui/accordion';
-import { api } from '@/api/client';
 import { useFilters } from '../../_hooks/useFilters';
 import { PriceFilter } from './PriceFilter';
 import { CheckboxFilter } from './CheckboxFilter';
@@ -11,22 +9,11 @@ import { FilterSection } from './FilterSection';
 
 interface FiltersProps {
   collectionHandle: string;
+  initialFilters: any;
 }
 
-async function getAvailableFilters(collectionHandle: string) {
-  const response = await api.get(
-    `/collections/handle/${collectionHandle}/filters`
-  );
-  return response.data;
-}
-
-export function Filters({ collectionHandle }: FiltersProps) {
-  const { data: filtersData, isLoading } = useQuery({
-    queryKey: ['filters', collectionHandle],
-    queryFn: () => getAvailableFilters(collectionHandle),
-  });
-
-  const filters = filtersData?.data;
+export function Filters({ collectionHandle, initialFilters }: FiltersProps) {
+  const filters = initialFilters;
 
   const {
     searchParams,
@@ -50,27 +37,9 @@ export function Filters({ collectionHandle }: FiltersProps) {
     });
   };
 
-  if (isLoading) {
-    return (
-      <aside aria-label="Filters" className="hidden h-full space-y-6 md:block">
-        <div className="sticky -top-[20px] h-fit">
-          <h2 className="text-lg font-semibold">Filters</h2>
-          <div className="space-y-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="animate-pulse space-y-2">
-                <div className="h-6 rounded bg-gray-200"></div>
-                <div className="h-4 w-3/4 rounded bg-gray-200"></div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </aside>
-    );
-  }
-
   return (
-    <aside aria-label="Filters" className="hidden h-full space-y-6 md:block">
-      <div className="sticky -top-[20px] h-fit">
+    <aside aria-label="Filters" className="hidden h-full space-y-5 md:block">
+      <div className="sticky -top-[21px] h-fit">
         <InStockFilter
           checked={searchParams.get('inStock') === 'true'}
           onChange={handleInStockChange}
@@ -82,13 +51,13 @@ export function Filters({ collectionHandle }: FiltersProps) {
             <PriceFilter
               priceRange={filters?.priceRange}
               searchParams={searchParams}
-              onPriceChange={() => {}} // Local state handled internally
+              onPriceChange={() => {}}
               onPriceCommit={handlePriceCommit}
             />
           </FilterSection>
 
           {/* Brand Filter */}
-          {filters?.vendors && filters.vendors.length > 0 && (
+          {filters?.vendors && filters.vendors.length > 1 && (
             <FilterSection value="vendor" title="Brand">
               <CheckboxFilter
                 type="single"
@@ -104,7 +73,7 @@ export function Filters({ collectionHandle }: FiltersProps) {
           )}
 
           {/* Product Type Filter */}
-          {filters?.productTypes && filters.productTypes.length > 0 && (
+          {filters?.productTypes && filters.productTypes.length > 1 && (
             <FilterSection value="productType" title="Product Type">
               <CheckboxFilter
                 type="single"
@@ -120,7 +89,7 @@ export function Filters({ collectionHandle }: FiltersProps) {
           )}
 
           {/* Gender Filter */}
-          {filters?.genders && filters.genders.length > 0 && (
+          {filters?.genders && filters.genders.length > 1 && (
             <FilterSection value="gender" title="Gender">
               <CheckboxFilter
                 type="multi"
@@ -136,7 +105,7 @@ export function Filters({ collectionHandle }: FiltersProps) {
           )}
 
           {/* Size Filter */}
-          {filters?.sizes && filters.sizes.length > 0 && (
+          {filters?.sizes && filters.sizes.length > 1 && (
             <FilterSection value="size" title="Size">
               <CheckboxFilter
                 type="multi"
@@ -152,7 +121,7 @@ export function Filters({ collectionHandle }: FiltersProps) {
           )}
 
           {/* Color Filter */}
-          {filters?.colors && filters.colors.length > 0 && (
+          {filters?.colors && filters.colors.length > 1 && (
             <FilterSection value="color" title="Color">
               <CheckboxFilter
                 type="multi"

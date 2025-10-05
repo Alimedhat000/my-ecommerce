@@ -1,4 +1,7 @@
+'use client';
+
 import React from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { SortOption } from '@/types/collection';
 import {
   Select,
@@ -12,15 +15,24 @@ import { Label } from '@/components/ui/label';
 interface SortSelectProps {
   options: SortOption[];
   currentSort: string;
-  onSortChange: (sortValue: string) => void;
+  collectionHandle: string;
 }
 
 export default function SortSelect({
   options,
   currentSort,
-  onSortChange,
+  collectionHandle,
 }: SortSelectProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const currentOption = options.find((option) => option.value === currentSort);
+
+  const handleSortChange = (sortValue: string) => {
+    const current = new URLSearchParams(searchParams.toString());
+    current.set('sort', sortValue);
+    current.set('page', '1');
+    router.push(`/collections/${collectionHandle}?${current.toString()}`);
+  };
 
   return (
     <div className="ml-auto flex min-w-[350px] items-center justify-end gap-3">
@@ -30,7 +42,7 @@ export default function SortSelect({
       >
         Sort by
       </Label>
-      <Select value={currentSort} onValueChange={onSortChange}>
+      <Select value={currentSort} onValueChange={handleSortChange}>
         <SelectTrigger
           id="sort-select"
           className="border-border bg-background w-[210px]"

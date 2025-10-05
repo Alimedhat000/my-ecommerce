@@ -1,13 +1,17 @@
 import { Metadata } from 'next';
-import ClientCollectionContent from './_components/clientCollectionContent';
-import {
-  dehydrate,
-  HydrationBoundary,
-  QueryClient,
-} from '@tanstack/react-query';
 import { getProductsByCollectionHandle } from '@/api/collections';
-
 import { SortOption } from '@/types/collection';
+import { api } from '@/api/client';
+import { Settings2 } from 'lucide-react';
+
+// Server components
+import ProductGrid from './_components/productGrid';
+
+// Client components (interactive)
+import Pagination from './_components/pagination';
+import ActiveFilters from './_components/activeFilters';
+import { Filters } from './_components/filters/Filters';
+import SortSelect from './_components/sortSelect';
 
 type CollectionPageProps = {
   params: { handle: string };
@@ -20,14 +24,11 @@ type CollectionPageProps = {
 
 function formatHandle(handle: string): string {
   const transformations: Record<string, string> = {
-    // Direct replacements
     mens: "Men's",
     womens: "Women's",
     kids: "Kids'",
     tshirt: 'T-Shirt',
     tshirts: 'T-Shirts',
-
-    // Common patterns
     't-shirt': 'T-Shirt',
     't-shirts': 'T-Shirts',
     'long-sleeve': 'Long Sleeve',
@@ -46,7 +47,6 @@ function formatHandle(handle: string): string {
     })
     .join(' ');
 
-  // Handle common product name patterns
   formatted = formatted
     .replace(/\bT Shirt\b/g, 'T-Shirt')
     .replace(/\bT Shirts\b/g, 'T-Shirts')
@@ -72,9 +72,8 @@ export default async function CollectionPage({
   searchParams,
 }: CollectionPageProps) {
   const { handle } = await params;
-
-  // Parse search params for initial server-side data
   const resolvedSearchParams = await searchParams;
+
   const currentPage = parseInt(resolvedSearchParams.page || '1', 10);
   const currentSort = resolvedSearchParams.sort || 'manual';
 
@@ -84,25 +83,36 @@ export default async function CollectionPage({
     { value: 'price-desc', label: 'Price: High to Low' },
     { value: 'date-asc', label: 'Date: Old to New' },
     { value: 'date-desc', label: 'Date: New to Old' },
-    { value: 'alpha-asc', label: 'Alphabtically: Low to High' },
-    { value: 'alpha-desc', label: 'Alphabtically: High to Low' },
+    { value: 'alpha-asc', label: 'Alphabetically: Low to High' },
+    { value: 'alpha-desc', label: 'Alphabetically: High to Low' },
   ];
 
-  const queryClient = new QueryClient();
+  const filterParams = {
+    vendor: resolvedSearchParams.vendor,
+    productType: resolvedSearchParams.productType,
+    gender: resolvedSearchParams.gender,
+    size: resolvedSearchParams.size,
+    color: resolvedSearchParams.color,
+    minPrice: resolvedSearchParams.minPrice,
+    maxPrice: resolvedSearchParams.maxPrice,
+    inStock: resolvedSearchParams.inStock
+      ? resolvedSearchParams.inStock === 'true'
+      : undefined,
+  };
 
-  await queryClient.prefetchQuery({
-    queryKey: ['products', handle, currentPage, currentSort],
-    queryFn: () =>
-      getProductsByCollectionHandle(handle, currentPage, 30, currentSort),
-  });
+  // Fetch data on server
+  const [filtersFetch, productsFetch] = await Promise.all([
+    api.get(`/collections/handle/${handle}/filters`),
+    getProductsByCollectionHandle(
+      handle,
+      currentPage,
+      30,
+      currentSort,
+      filterParams
+    ),
+  ]);
 
-  await queryClient.prefetchQuery({
-    queryKey: ['filters', handle],
-    queryFn: () =>
-      fetch(`/api/collections/handle/${handle}/filters`).then((res) =>
-        res.json()
-      ),
-  });
+  const filters = filtersFetch.data.data;
 
   return (
     <main className="mb-20">
@@ -114,16 +124,34 @@ export default async function CollectionPage({
 
       <section className="mx-12" aria-label="Product Listings">
         <div className="mt-12 grid grid-cols-[minmax(0,1fr)] gap-12 md:grid-cols-[250px_minmax(0,1fr)]">
-          {/* Top bar */}
-          <div className="col-span-2 grid grid-cols-[inherit] items-center justify-between gap-x-[inherit]">
-            {/* Client component handles interactive filtering/sorting */}
-            <HydrationBoundary state={dehydrate(queryClient)}>
-              <ClientCollectionContent
-                sortOptions={sortOptions}
+          {/* Top Bar - Server rendered except SortSelect */}
+          <div className="col-span-2 hidden grid-cols-[inherit] items-center justify-between gap-x-[inherit] md:grid">
+            <div className="flex items-center gap-3 font-medium">
+              <Settings2 className="h-5 w-5" aria-hidden="true" />
+              <span>Filters</span>
+            </div>
+            <div className="flex items-center pb-10">
+              <ActiveFilters />
+              <SortSelect
+                options={sortOptions}
+                currentSort={currentSort}
                 collectionHandle={handle}
               />
-            </HydrationBoundary>
+            </div>
           </div>
+
+          {/* Filters - Server rendered with client interactivity */}
+          <Filters collectionHandle={handle} initialFilters={filters} />
+
+          {/* Product Grid - Server rendered */}
+          <ProductGrid products={productsFetch.data} />
+
+          {/* Pagination - Server rendered with client navigation */}
+          <Pagination
+            currentPage={productsFetch.meta?.currentPage || 1}
+            totalPages={productsFetch.meta?.totalPages || 1}
+            collectionHandle={handle}
+          />
         </div>
       </section>
     </main>
