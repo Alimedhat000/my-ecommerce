@@ -15,6 +15,8 @@ const commonAliases: Record<string, string> = {
   green: '#327064',
   'jade green': '#00BB77',
   café: '#855b5b',
+  burgundy: '#660033',
+  oily: '#888e77',
 };
 
 /**

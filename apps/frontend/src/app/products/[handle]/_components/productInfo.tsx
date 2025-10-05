@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Minus, Plus, Ruler } from 'lucide-react';
 import { mapNameToHex } from '@/utils/mapNameToHex';
+import { ProductImage } from '@/types/collection';
 
 interface Variant {
   id: number;
@@ -34,21 +35,27 @@ interface Product {
   id: number;
   title: string;
   vendor: string;
+  images: ProductImage[];
   variants: Variant[];
   options: Option[];
 }
 
 interface ProductInfoProps {
   product: Product;
+  onColorChange?: (color: string, imageIndex: number) => void;
 }
 
-export default function ProductInfo({ product }: ProductInfoProps) {
+export default function ProductInfo({
+  product,
+  onColorChange,
+}: ProductInfoProps) {
   // Extract unique colors and sizes from options
   const colorOption = product.options.find((opt) => opt.name === 'Color');
   const sizeOption = product.options.find((opt) => opt.name === 'Size');
 
   const colors = useMemo(() => {
     if (!colorOption) return [];
+
     return colorOption.values.map((colorName) => ({
       name: colorName,
       hex: mapNameToHex(colorName) || '#000000',
@@ -61,6 +68,30 @@ export default function ProductInfo({ product }: ProductInfoProps) {
   const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState(1);
 
+  // Get available variants for the selected color
+  const availableVariantsForSelectedColor = useMemo(() => {
+    return product.variants.filter(
+      (v) => v.option1 === selectedColor && v.available
+    );
+  }, [product.variants, selectedColor]);
+
+  // Check if a color has any available variants
+  const isColorAvailable = useMemo(() => {
+    const colorAvailability = new Map();
+    colors.forEach((color) => {
+      const hasAvailableVariant = product.variants.some(
+        (v) => v.option1 === color.name && v.available
+      );
+      colorAvailability.set(color.name, hasAvailableVariant);
+    });
+    return colorAvailability;
+  }, [colors, product.variants]);
+
+  // Check if a specific size is available for the selected color
+  const isSizeAvailable = (size: string) => {
+    return availableVariantsForSelectedColor.some((v) => v.option2 === size);
+  };
+
   // Find the selected variant based on color and size
   const selectedVariant = useMemo(() => {
     return product.variants.find(
@@ -68,10 +99,26 @@ export default function ProductInfo({ product }: ProductInfoProps) {
     );
   }, [product.variants, selectedColor, selectedSize]);
 
-  // Get price information from selected variant or first variant
-  const currentVariant = selectedVariant || product.variants[0];
-  const price = parseFloat(currentVariant.price);
-  const compareAtPrice = parseFloat(currentVariant.compareAtPrice);
+  // Get the first variant for each color to find associated images
+  const colorVariants = useMemo(() => {
+    const colorMap = new Map();
+    product.variants.forEach((variant) => {
+      if (variant.option1 && !colorMap.has(variant.option1)) {
+        colorMap.set(variant.option1, variant);
+      }
+    });
+    return colorMap;
+  }, [product.variants]);
+
+  // Get price information from selected variant or first available variant
+  const currentVariant =
+    selectedVariant ||
+    availableVariantsForSelectedColor[0] ||
+    product.variants[0];
+  const price = currentVariant ? parseFloat(currentVariant.price) : 0;
+  const compareAtPrice = currentVariant
+    ? parseFloat(currentVariant.compareAtPrice)
+    : 0;
   const discount =
     compareAtPrice > price
       ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100)
@@ -79,6 +126,32 @@ export default function ProductInfo({ product }: ProductInfoProps) {
 
   const handleQuantityChange = (delta: number) => {
     setQuantity((prev) => Math.max(1, prev + delta));
+  };
+
+  const handleColorChange = (colorName: string) => {
+    if (!isColorAvailable.get(colorName)) return;
+
+    setSelectedColor(colorName);
+    setSelectedSize(''); // Reset size when color changes
+
+    // Find the first variant with this color that has an image
+    const colorVariant = colorVariants.get(colorName);
+
+    if (colorVariant && colorVariant.image && onColorChange) {
+      // Find the index of the image in the product.images array
+      const imageIndex = product.images.findIndex(
+        (img) => img.id === colorVariant.imageId
+      );
+
+      if (imageIndex !== -1) {
+        onColorChange(colorName, imageIndex);
+      }
+    }
+  };
+
+  const handleSizeChange = (size: string) => {
+    if (!isSizeAvailable(size)) return;
+    setSelectedSize(size);
   };
 
   // Helper to convert hex to Tailwind-compatible style
@@ -123,19 +196,35 @@ export default function ProductInfo({ product }: ProductInfoProps) {
             {selectedColor}
           </p>
           <div className="mt-2 flex gap-3">
-            {colors.map((color) => (
-              <button
-                key={color.name}
-                onClick={() => setSelectedColor(color.name)}
-                style={getColorStyle(color.hex)}
-                className={`h-8 w-8 rounded-full border-2 ${
-                  selectedColor === color.name
-                    ? 'border-black ring-2 ring-black ring-offset-2'
-                    : 'border-gray-300'
-                }`}
-                aria-label={`Select ${color.name} color`}
-              />
-            ))}
+            {colors.map((color) => {
+              const isAvailable = isColorAvailable.get(color.name);
+              const isSelected = selectedColor === color.name;
+
+              return (
+                <button
+                  key={color.name}
+                  onClick={() => handleColorChange(color.name)}
+                  style={getColorStyle(color.hex)}
+                  className={`relative h-8 w-8 rounded-full border-2 ${isSelected
+                      ? 'border-black ring-2 ring-black ring-offset-2'
+                      : 'border-muted-foreground'
+                    } ${!isAvailable
+                      ? 'ring-destructive cursor-not-allowed opacity-50 ring-2 ring-offset-2'
+                      : 'cursor-pointer'
+                    }`}
+                  aria-label={`Select ${color.name} color`}
+                  disabled={!isAvailable}
+                  title={!isAvailable ? 'Out of stock' : `Select ${color.name}`}
+                >
+                  {/* Red X overlay for unavailable colors */}
+                  {!isAvailable && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="bg-destructive h-0.5 w-full origin-center rotate-45 transform"></div>
+                    </div>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -145,19 +234,36 @@ export default function ProductInfo({ product }: ProductInfoProps) {
         <div>
           <p className="text-md text-muted-foreground font-medium">Size:</p>
           <div className="mt-2 flex gap-2">
-            {sizes.map((size) => (
-              <button
-                key={size}
-                onClick={() => setSelectedSize(size)}
-                className={`flex h-12 items-center justify-center rounded-3xl border-2 px-6 transition-colors ${
-                  selectedSize === size
-                    ? 'border-black bg-black text-white'
-                    : 'border-gray-300 hover:bg-gray-100'
-                }`}
-              >
-                {size}
-              </button>
-            ))}
+            {sizes.map((size) => {
+              const isAvailable = isSizeAvailable(size);
+              const isSelected = selectedSize === size;
+
+              return (
+                <button
+                  key={size}
+                  onClick={() => handleSizeChange(size)}
+                  className={`relative flex h-12 items-center justify-center rounded-3xl border-2 px-6 transition-colors ${isSelected
+                      ? 'border-black bg-black text-white'
+                      : isAvailable
+                        ? 'border-muted-foreground hover:bg-gray-100'
+                        : 'border-muted-foreground opacity-50'
+                    } ${!isAvailable
+                      ? 'ring- cursor-not-allowed ring-2 ring-offset-2'
+                      : 'cursor-pointer'
+                    }`}
+                  disabled={!isAvailable}
+                  title={!isAvailable ? 'Out of stock' : `Select ${size}`}
+                >
+                  {size}
+                  {/* Red X overlay for unavailable sizes */}
+                  {!isAvailable && (
+                    <div className="absolute inset-0 flex items-center justify-center rounded-3xl">
+                      <div className="bg-destructive oriain-center h-0.5 w-3/4 rotate-45 transform"></div>
+                    </div>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -190,7 +296,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
 
       {/* Availability Notice */}
       {selectedVariant && !selectedVariant.available && (
-        <div className="text-sm text-red-600">
+        <div className="text-destructive text-sm">
           This variant is currently out of stock
         </div>
       )}
@@ -204,7 +310,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
           Add to cart
         </button>
         <button
-          className="bg-foreground hover:bg-foreground/80 flex-1 rounded-3xl py-3 text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+          className="bg-foreground hover:bg-foreground/80 flex-1 rounded-3xl py-4 text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
           disabled={!selectedVariant || !selectedVariant.available}
         >
           Buy it now

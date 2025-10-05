@@ -1,12 +1,11 @@
 import { Metadata } from 'next';
-import ProductGallery from './_components/productGallery';
-import ProductInfo from './_components/productInfo';
 import ProductReviews from './_components/productReviews';
 import ProductSuggestions from './_components/productSuggestions';
 import { api } from '@/api/client';
 import { ProductImage } from '@/types/collection';
 import Image from 'next/image';
 import React from 'react';
+import { ProductView } from './_components/productView';
 
 interface ProductPageProps {
   params: { handle: string };
@@ -50,11 +49,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const handle = await params;
   const res = await api.get(`/products/handle/${handle.handle}`);
   const product = res.data.data;
+  // console.log(product);
 
   return (
     <>
       <div style={{ display: 'none' }}>
-        {product.images.slice(0, 3).map((img: ProductImage, index: number) => (
+        {product.images.slice(0, 3).map((img: ProductImage) => (
           <div key={img.id}>
             {/* Preload thumbnail size */}
             <Image
@@ -62,7 +62,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               alt="preload thumbnail"
               width={64}
               height={85}
-              priority={index === 0}
+              priority
             />
             {/* Preload gallery size */}
             <Image
@@ -70,7 +70,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               alt="preload gallery"
               width={900}
               height={1200}
-              priority={index === 0}
+              priority
             />
           </div>
         ))}
@@ -78,14 +78,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
       <main className="mb-20">
         {/* Product Section */}
-        <section className="grid-rows-auto grid grid-cols-1 items-start gap-x-12 gap-y-10 p-12 lg:grid-cols-2">
-          <ProductGallery
-            images={product.images.map((img: ProductImage) => img.src)}
-            title={product.title}
-          />
-          <ProductInfo product={product} />
-        </section>
-
+        <ProductView product={product} />
         <ProductReviews />
         <ProductSuggestions />
       </main>

@@ -10,13 +10,35 @@ import { X, ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
 interface ProductGalleryProps {
   images: string[];
   title: string;
+  currentIndex?: number;
+  onIndexChange?: (index: number) => void;
 }
 
-export default function ProductGallery({ images, title }: ProductGalleryProps) {
+export default function ProductGallery({
+  images,
+  title,
+  currentIndex: externalIndex,
+  onIndexChange,
+}: ProductGalleryProps) {
   const [isZoomed, setIsZoomed] = useState(false);
   const [zoomIndex, setZoomIndex] = useState(0);
   const [isMaxZoomed, setIsMaxZoomed] = useState(false);
   const [zoomOrigin, setZoomOrigin] = useState({ x: 0.5, y: 0.5 });
+
+  // Use internal state if no external control is provided
+  const [internalIndex, setInternalIndex] = useState(0);
+
+  // Use external index if provided, otherwise use internal state
+  const currentIndex =
+    externalIndex !== undefined ? externalIndex : internalIndex;
+
+  const handleIndexChange = (index: number) => {
+    if (onIndexChange) {
+      onIndexChange(index);
+    } else {
+      setInternalIndex(index);
+    }
+  };
 
   const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
     if (!isMaxZoomed) {
@@ -34,7 +56,6 @@ export default function ProductGallery({ images, title }: ProductGalleryProps) {
   };
 
   const {
-    currentIndex,
     nextItem,
     prevItem,
     goToItem,
@@ -46,7 +67,8 @@ export default function ProductGallery({ images, title }: ProductGalleryProps) {
     handleMouseMove: cursorHandleMouseMove,
   } = useCustomCursor({
     totalItems: images.length,
-    initialIndex: 0,
+    initialIndex: currentIndex,
+    onIndexChange: handleIndexChange, // Pass the callback to update index
   });
 
   const {
@@ -79,17 +101,29 @@ export default function ProductGallery({ images, title }: ProductGalleryProps) {
   };
 
   const nextZoomImage = () => {
-    setZoomIndex((prev) => (prev + 1) % images.length);
+    const newIndex = (zoomIndex + 1) % images.length;
+    setZoomIndex(newIndex);
     setIsMaxZoomed(false);
+    handleIndexChange(newIndex); // Sync with main gallery
   };
 
   const prevZoomImage = () => {
-    setZoomIndex((prev) => (prev - 1 + images.length) % images.length);
+    const newIndex = (zoomIndex - 1 + images.length) % images.length;
+    setZoomIndex(newIndex);
     setIsMaxZoomed(false);
+    handleIndexChange(newIndex); // Sync with main gallery
   };
 
   const toggleMaxZoom = () => {
     setIsMaxZoomed((prev) => !prev);
+  };
+
+  // Update the goToItem function to use our handler
+  const handleGoToItem = (index: number) => {
+    handleIndexChange(index);
+    if (isZoomed) {
+      setZoomIndex(index);
+    }
   };
 
   // Handle keyboard navigation
@@ -133,12 +167,11 @@ export default function ProductGallery({ images, title }: ProductGalleryProps) {
             {images.map((image, index) => (
               <button
                 key={index}
-                onClick={() => goToItem(index)}
-                className={`relative cursor-pointer overflow-hidden transition-opacity ${
-                  currentIndex === index
+                onClick={() => handleGoToItem(index)}
+                className={`relative cursor-pointer overflow-hidden transition-opacity ${currentIndex === index
                     ? 'after:absolute after:bottom-0 after:left-0 after:block after:h-[2px] after:w-full after:rounded-2xl after:bg-black after:content-[""]'
                     : ''
-                }`}
+                  }`}
               >
                 <Image
                   src={image}
@@ -212,10 +245,10 @@ export default function ProductGallery({ images, title }: ProductGalleryProps) {
           {/* Close Button */}
           <button
             onClick={closeZoom}
-            className="border-ring absolute top-5 right-12 z-10 rounded-full border bg-white p-5 transition-all hover:bg-white/90"
+            className="border-ring absolute top-5 right-12 z-10 rounded-full border bg-white p-3 transition-all hover:bg-white/90"
             aria-label="Close zoom"
           >
-            <X className="h-6 w-6 text-black" />
+            <X className="text-muted-foreground h-6 w-6" />
           </button>
 
           {/* Zoomed Image */}
@@ -224,16 +257,17 @@ export default function ProductGallery({ images, title }: ProductGalleryProps) {
           >
             <Image
               src={images[zoomIndex]}
-              alt={`${title} zoomed image ${zoomIndex + 1}`}
+              alt={`${title} image ${zoomIndex + 1}`}
               width={900}
               height={1200}
-              onClick={handleImageClick}
               className={`max-h-full max-w-full object-contain transition-transform duration-500 ease-in-out ${isMaxZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
+              priority
+              onClick={handleImageClick}
+              sizes="(max-width: 1024px) 100vw, 50vw"
               style={{
                 transform: isMaxZoomed ? 'scale(2)' : 'scale(1)',
                 transformOrigin: `${zoomOrigin.x * 100}% ${zoomOrigin.y * 100}%`,
               }}
-              priority
             />
           </div>
 
