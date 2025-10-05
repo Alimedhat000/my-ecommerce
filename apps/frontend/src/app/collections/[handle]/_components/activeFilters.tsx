@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { X } from 'lucide-react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 interface ActiveFilter {
   key: string;
@@ -11,22 +11,15 @@ interface ActiveFilter {
   displayText: string;
 }
 
-interface ActiveFiltersProps {
-  onRemoveFilter: (filterKey: string, filterValue?: string) => void;
-  onRemoveAllFilters: () => void;
-}
-
-export default function ActiveFilters({
-  onRemoveFilter,
-  onRemoveAllFilters,
-}: ActiveFiltersProps) {
+export default function ActiveFilters() {
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   // Extract active filters from URL search params
   const getActiveFilters = (): ActiveFilter[] => {
     const filters: ActiveFilter[] = [];
 
-    // Check for price range first - combine minPrice and maxPrice into one filter
+    // Check for price range first
     const minPrice = searchParams.get('minPrice');
     const maxPrice = searchParams.get('maxPrice');
 
@@ -42,7 +35,7 @@ export default function ActiveFilters({
       });
     }
 
-    // Single value filters (excluding price-related ones since we handled them above)
+    // Single value filters
     const singleValueFilters = ['vendor', 'productType', 'inStock'];
 
     singleValueFilters.forEach((key) => {
@@ -73,7 +66,7 @@ export default function ActiveFilters({
       }
     });
 
-    // Array value filters (comma-separated)
+    // Array value filters
     const arrayValueFilters = ['gender', 'size', 'color'];
 
     arrayValueFilters.forEach((key) => {
@@ -112,40 +105,48 @@ export default function ActiveFilters({
 
   const activeFilters = getActiveFilters();
 
-  if (activeFilters.length === 0) return null;
-
   const handleRemove = (filter: ActiveFilter) => {
-    // Special handling for price range
+    const current = new URLSearchParams(searchParams.toString());
+
     if (filter.key === 'priceRange') {
-      // Remove both minPrice and maxPrice
-      onRemoveFilter('priceRange');
-      return;
-    }
-
-    // For array filters, we need to remove just this value, not the entire filter
-    const arrayFilters = ['gender', 'size', 'color'];
-
-    if (arrayFilters.includes(filter.key)) {
-      // Get current values for this filter
-      const currentValues = searchParams.get(filter.key)?.split(',') || [];
-      const newValues = currentValues.filter((v) => v !== filter.value);
-
-      if (newValues.length === 0) {
-        // No values left, remove the entire filter
-        onRemoveFilter(filter.key);
-      } else {
-        // Update with remaining values
-        onRemoveFilter(filter.key, filter.value);
-      }
+      current.delete('minPrice');
+      current.delete('maxPrice');
     } else {
-      // Single value filters - remove the entire filter
-      onRemoveFilter(filter.key);
+      const arrayFilters = ['gender', 'size', 'color'];
+
+      if (arrayFilters.includes(filter.key)) {
+        const currentValues = searchParams.get(filter.key)?.split(',') || [];
+        const newValues = currentValues.filter((v) => v !== filter.value);
+
+        if (newValues.length === 0) {
+          current.delete(filter.key);
+        } else {
+          current.set(filter.key, newValues.join(','));
+        }
+      } else {
+        current.delete(filter.key);
+      }
     }
+
+    current.set('page', '1');
+    router.push(`?${current.toString()}`);
   };
+
+  const handleRemoveAll = () => {
+    const current = new URLSearchParams(searchParams.toString());
+    const sort = current.get('sort');
+
+    const newParams = new URLSearchParams();
+    if (sort) newParams.set('sort', sort);
+    newParams.set('page', '1');
+
+    router.push(`?${newParams.toString()}`);
+  };
+
+  if (activeFilters.length === 0) return null;
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      {/* Active Filters */}
       <div className="flex flex-wrap items-center gap-2">
         {activeFilters.map((filter, index) => (
           <div
@@ -162,9 +163,8 @@ export default function ActiveFilters({
             </button>
           </div>
         ))}
-        {/* Remove All Button */}
         <button
-          onClick={onRemoveAllFilters}
+          onClick={handleRemoveAll}
           className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 rounded-full border border-transparent px-3 py-1 text-sm transition-colors hover:underline"
           aria-label="Remove all filters"
         >

@@ -1,25 +1,38 @@
+'use client';
+
 import React from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
-  onPageChange: (page: number) => void;
+  collectionHandle: string;
 }
 
 export default function Pagination({
   currentPage,
   totalPages,
-  onPageChange,
+  collectionHandle,
 }: PaginationProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const handlePageChange = (page: number) => {
+    const current = new URLSearchParams(searchParams.toString());
+    current.set('page', page.toString());
+    router.push(`/collections/${collectionHandle}?${current.toString()}`);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handlePrevious = () => {
     if (currentPage > 1) {
-      onPageChange(currentPage - 1);
+      handlePageChange(currentPage - 1);
     }
   };
 
   const handleNext = () => {
     if (currentPage < totalPages) {
-      onPageChange(currentPage + 1);
+      handlePageChange(currentPage + 1);
     }
   };
 
