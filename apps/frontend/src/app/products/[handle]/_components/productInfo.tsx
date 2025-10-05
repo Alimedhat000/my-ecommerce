@@ -205,13 +205,15 @@ export default function ProductInfo({
                   key={color.name}
                   onClick={() => handleColorChange(color.name)}
                   style={getColorStyle(color.hex)}
-                  className={`relative h-8 w-8 rounded-full border-2 ${isSelected
+                  className={`relative h-8 w-8 rounded-full border-2 ${
+                    isSelected
                       ? 'border-black ring-2 ring-black ring-offset-2'
                       : 'border-muted-foreground'
-                    } ${!isAvailable
+                  } ${
+                    !isAvailable
                       ? 'ring-destructive cursor-not-allowed opacity-50 ring-2 ring-offset-2'
                       : 'cursor-pointer'
-                    }`}
+                  }`}
                   aria-label={`Select ${color.name} color`}
                   disabled={!isAvailable}
                   title={!isAvailable ? 'Out of stock' : `Select ${color.name}`}
@@ -242,15 +244,17 @@ export default function ProductInfo({
                 <button
                   key={size}
                   onClick={() => handleSizeChange(size)}
-                  className={`relative flex h-12 items-center justify-center rounded-3xl border-2 px-6 transition-colors ${isSelected
+                  className={`relative flex h-12 items-center justify-center rounded-3xl border-2 px-6 transition-colors ${
+                    isSelected
                       ? 'border-black bg-black text-white'
                       : isAvailable
                         ? 'border-muted-foreground hover:bg-gray-100'
                         : 'border-muted-foreground opacity-50'
-                    } ${!isAvailable
+                  } ${
+                    !isAvailable
                       ? 'ring- cursor-not-allowed ring-2 ring-offset-2'
                       : 'cursor-pointer'
-                    }`}
+                  }`}
                   disabled={!isAvailable}
                   title={!isAvailable ? 'Out of stock' : `Select ${size}`}
                 >

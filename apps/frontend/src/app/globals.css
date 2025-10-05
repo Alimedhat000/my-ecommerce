@@ -135,6 +135,8 @@
   --sidebar-accent-foreground: oklch(0.21 0.034 264.665);
   --sidebar-border: oklch(0.928 0.006 264.531);
   --sidebar-ring: oklch(0.707 0.022 261.325);
+
+  --max-width: 1900px;
 }
 
 .dark {
@@ -183,14 +185,15 @@ body {
   text-transform: var(--heading-text-transform);
 }
 
+header,
+main,
+footer {
+  padding: 2.125rem max(3rem, 50% - var(--max-width) / 2);
+}
+
 main {
   font-family: var(--font-body);
   letter-spacing: var(--body-letter-spacing);
-  --max-width: 1900px;
-
-  margin-left: auto;
-  margin-right: auto;
-  max-width: var(--max-width);
 }
 
 @layer base {
