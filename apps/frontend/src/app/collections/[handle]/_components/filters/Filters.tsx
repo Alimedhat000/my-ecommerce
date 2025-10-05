@@ -6,14 +6,16 @@ import { PriceFilter } from './PriceFilter';
 import { CheckboxFilter } from './CheckboxFilter';
 import { InStockFilter } from './InStockFilter';
 import { FilterSection } from './FilterSection';
+import { FiltersType } from '@/types/collection';
 
 interface FiltersProps {
   collectionHandle: string;
-  initialFilters: any;
+  initialFilters: FiltersType;
 }
 
 export function Filters({ collectionHandle, initialFilters }: FiltersProps) {
   const filters = initialFilters;
+  console.log(filters);
 
   const {
     searchParams,
@@ -31,6 +33,16 @@ export function Filters({ collectionHandle, initialFilters }: FiltersProps) {
   };
 
   const handlePriceCommit = (values: number[]) => {
+    const [minVal, maxVal] = values;
+
+    if (
+      minVal == filters?.priceRange.min &&
+      maxVal == filters?.priceRange.max &&
+      minVal.toString() != searchParams.get('minPrice') &&
+      maxVal.toString() != searchParams.get('maxPrice')
+    )
+      return;
+
     updateFilters({
       minPrice: values[0].toString(),
       maxPrice: values[1].toString(),

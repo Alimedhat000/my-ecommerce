@@ -4,10 +4,8 @@ import { SortOption } from '@/types/collection';
 import { api } from '@/api/client';
 import { Settings2 } from 'lucide-react';
 
-// Server components
 import ProductGrid from './_components/productGrid';
 
-// Client components (interactive)
 import Pagination from './_components/pagination';
 import ActiveFilters from './_components/activeFilters';
 import { Filters } from './_components/filters/Filters';
@@ -124,7 +122,6 @@ export default async function CollectionPage({
 
       <section className="mx-12" aria-label="Product Listings">
         <div className="mt-12 grid grid-cols-[minmax(0,1fr)] gap-12 md:grid-cols-[250px_minmax(0,1fr)]">
-          {/* Top Bar - Server rendered except SortSelect */}
           <div className="col-span-2 hidden grid-cols-[inherit] items-center justify-between gap-x-[inherit] md:grid">
             <div className="flex items-center gap-3 font-medium">
               <Settings2 className="h-5 w-5" aria-hidden="true" />
@@ -140,13 +137,10 @@ export default async function CollectionPage({
             </div>
           </div>
 
-          {/* Filters - Server rendered with client interactivity */}
           <Filters collectionHandle={handle} initialFilters={filters} />
 
-          {/* Product Grid - Server rendered */}
           <ProductGrid products={productsFetch.data} />
 
-          {/* Pagination - Server rendered with client navigation */}
           <Pagination
             currentPage={productsFetch.meta?.currentPage || 1}
             totalPages={productsFetch.meta?.totalPages || 1}

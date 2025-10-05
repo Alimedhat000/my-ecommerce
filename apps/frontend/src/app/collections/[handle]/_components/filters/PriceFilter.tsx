@@ -59,7 +59,6 @@ export function PriceFilter({
     const newInputValues = [...inputValues];
     newInputValues[index] = numericValue;
     setInputValues(newInputValues);
-
     // Update local price values for immediate slider feedback
     if (numericValue) {
       const numValue = parseInt(numericValue);
@@ -155,7 +154,6 @@ export function PriceFilter({
               pattern="[0-9]*"
               value={inputValues[0]}
               onChange={(e) => handleInputChange(0, e.target.value)}
-              onBlur={() => handleInputBlur(0)}
               onKeyDown={(e) => handleInputKeyDown(0, e)}
               className="pr-8"
             />
@@ -186,7 +184,6 @@ export function PriceFilter({
               pattern="[0-9]*"
               value={inputValues[1]}
               onChange={(e) => handleInputChange(1, e.target.value)}
-              onBlur={() => handleInputBlur(1)}
               onKeyDown={(e) => handleInputKeyDown(1, e)}
               className="pr-8"
             />

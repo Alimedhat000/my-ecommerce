@@ -86,3 +86,13 @@ export interface PaginationProps {
   totalPages: number;
   onPageChange: (page: number) => void;
 }
+
+export type FiltersType = {
+  colors: string[];
+  genders: string[];
+  priceRange: { min: number; max: number };
+  productTypes: string[];
+  sizes: string[];
+  totalProducts: number;
+  vendors: string[];
+};
