@@ -10,12 +10,18 @@ export interface ProductFilters {
         max?: number;
     };
     search?: string;
+    // ADD THESE NEW FILTERS:
+    productType?: string;
+    gender?: string[];
+    size?: string[];
+    color?: string[];
+    inStock?: boolean;
 }
 
 export interface PaginationOptions {
     page?: number;
     limit?: number;
-    sortBy?: 'title' | 'createdAt' | 'updatedAt' | 'publishedAt';
+    sortBy?: string;
     sortOrder?: 'asc' | 'desc';
 }
 

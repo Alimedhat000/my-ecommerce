@@ -6,7 +6,7 @@
     "apps/*"
   ],
   "scripts": {
-    "dev": "concurrently \"yarn workspace frontend dev\" \"yarn workspace admin dev\" \"yarn workspace backend dev\""
+    "dev": "concurrently \"yarn workspace frontend dev\" \"yarn workspace backend dev\""
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

@@ -7,16 +7,15 @@ import {
     updateProduct,
     deleteProduct,
     getProductsByCollection,
+    getCollectionFilters,
 } from '../services/productService';
 import { catchAsync } from '../utils/errorHandler';
 import logger from '../utils/logger';
 import { createImage, deleteImage, getImagesByProductId } from '../services/imageService';
+import { getCategoryByHandle } from '../services/collectionService';
+import { PaginationOptions, ProductFilters } from '../types/productTypes';
+import { ProductStatus } from '@prisma/client';
 
-const ProductStatus = {
-    DRAFT: 'DRAFT',
-    ACTIVE: 'ACTIVE',
-    ARCHIVED: 'ARCHIVED',
-};
 const parseQueryParams = (query: any) => {
     const filters: any = {};
     const pagination: any = {};
@@ -198,21 +197,46 @@ export const getProductByHandleEndpoint = catchAsync(async (req: Request, res: R
 export const getProductsByCollectionEndpoint = catchAsync(async (req: Request, res: Response) => {
     try {
         const collectionId = parseInt(req.params.id);
-        const { page, limit } = req.query;
+        const { page, limit, sortBy, sortOrder, vendor, status, search, minPrice, maxPrice, tags } =
+            req.query;
 
         if (isNaN(collectionId) || collectionId <= 0) {
-            return res.status(400).json({
-                success: false,
-                error: 'Invalid collection ID',
-            });
+            return res.status(400).json({ success: false, error: 'Invalid collection ID' });
         }
 
-        const pagination = {
+        const pagination: PaginationOptions = {
             page: page ? Math.max(1, parseInt(page as string)) : 1,
             limit: limit ? Math.min(100, Math.max(1, parseInt(limit as string))) : 20,
+            sortBy: (sortBy as PaginationOptions['sortBy']) ?? 'createdAt',
+            sortOrder: (sortOrder as PaginationOptions['sortOrder']) ?? 'desc',
         };
 
-        const products = await getProductsByCollection(collectionId, pagination);
+        let parsedTags: string[] | undefined = undefined;
+
+        if (tags) {
+            if (Array.isArray(tags)) {
+                parsedTags = tags.map(String); // force all to string
+            } else if (typeof tags === 'string') {
+                parsedTags = tags.split(',').map((t) => t.trim());
+            }
+        }
+
+        const filters: ProductFilters = {
+            status: status as ProductStatus,
+            vendor: vendor as string,
+            search: search as string,
+            tags: parsedTags,
+            priceRange: {
+                min: minPrice ? parseFloat(minPrice as string) : undefined,
+                max: maxPrice ? parseFloat(maxPrice as string) : undefined,
+            },
+        };
+
+        const { products, totalCount } = await getProductsByCollection(
+            collectionId,
+            pagination,
+            filters
+        );
 
         res.json({
             success: true,
@@ -220,15 +244,179 @@ export const getProductsByCollectionEndpoint = catchAsync(async (req: Request, r
             meta: {
                 collectionId,
                 productsCount: products.length,
+                totalCount,
+                totalPages: Math.ceil(totalCount / pagination.limit! || 20),
+                currentPage: pagination.page,
             },
         });
     } catch (error) {
         console.error('Error fetching products by collection:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to fetch products',
-        });
+        res.status(500).json({ success: false, error: 'Failed to fetch products' });
         throw error;
+    }
+});
+
+// Get all products in a collection (by handle, public)
+export const getProductsByCollectionHandleEndpoint = catchAsync(
+    async (req: Request, res: Response) => {
+        try {
+            const { handle } = req.params;
+            const {
+                page,
+                limit,
+                sort,
+
+                vendor,
+                productType,
+                gender,
+                size,
+                color,
+                minPrice,
+                maxPrice,
+                inStock,
+            } = req.query; // Add sort parameter
+
+            if (!handle || typeof handle !== 'string') {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Invalid collection handle',
+                });
+            }
+
+            // Look up the collection by handle
+            const collection = await getCategoryByHandle(handle);
+            if (!collection) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'Collection not found',
+                });
+            }
+
+            const pagination: PaginationOptions = {
+                page: page ? Math.max(1, parseInt(page as string)) : 1,
+                limit: limit ? Math.min(100, Math.max(1, parseInt(limit as string))) : 20,
+            };
+
+            // Map frontend sort values to backend sort parameters
+            if (sort) {
+                const sortMapping: Record<string, { sortBy: string; sortOrder: 'asc' | 'desc' }> = {
+                    // Todo Edit manual sort after adding admin panel to edit product position in collections
+                    manual: { sortBy: 'variants.position', sortOrder: 'asc' }, // Featured - sort by variant position
+                    'price-asc': { sortBy: 'variants.price', sortOrder: 'asc' },
+                    'price-desc': { sortBy: 'variants.price', sortOrder: 'desc' },
+                    'date-asc': { sortBy: 'createdAt', sortOrder: 'asc' },
+                    'date-desc': { sortBy: 'createdAt', sortOrder: 'desc' },
+                    'alpha-asc': { sortBy: 'title', sortOrder: 'asc' },
+                    'alpha-desc': { sortBy: 'title', sortOrder: 'desc' },
+                };
+
+                const sortConfig = sortMapping[sort as string];
+                if (sortConfig) {
+                    pagination.sortBy = sortConfig.sortBy;
+                    pagination.sortOrder = sortConfig.sortOrder;
+                }
+            }
+
+            const filters: ProductFilters = {};
+
+            if (vendor) filters.vendor = vendor as string;
+            if (productType) filters.productType = productType as string;
+
+            if (gender) {
+                filters.gender = Array.isArray(gender)
+                    ? gender.map(String)
+                    : (gender as string).split(',').map((g) => g.trim());
+            }
+
+            if (size) {
+                filters.size = Array.isArray(size)
+                    ? size.map(String)
+                    : (size as string).split(',').map((s) => s.trim());
+            }
+
+            if (color) {
+                filters.color = Array.isArray(color)
+                    ? color.map(String)
+                    : (color as string).split(',').map((c) => c.trim());
+            }
+
+            if (minPrice || maxPrice) {
+                filters.priceRange = {
+                    min: minPrice ? parseFloat(minPrice as string) : undefined,
+                    max: maxPrice ? parseFloat(maxPrice as string) : undefined,
+                };
+            }
+
+            if (inStock) {
+                filters.inStock = inStock === 'true';
+            }
+
+            const { products, totalCount } = await getProductsByCollection(
+                collection.id,
+                pagination,
+                filters
+            );
+
+            res.json({
+                success: true,
+                data: products,
+                meta: {
+                    collectionId: collection.id,
+                    collectionHandle: collection.handle,
+                    productsCount: products.length,
+                    totalCount,
+                    totalPages: Math.ceil(totalCount / pagination.limit!),
+                    currentPage: pagination.page,
+                },
+            });
+        } catch (error) {
+            console.error('Error fetching products by collection handle:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Failed to fetch products',
+            });
+            throw error;
+        }
+    }
+);
+
+// controllers/productController.ts - Updated version
+export const getCollectionFiltersEndpoint = catchAsync(async (req: Request, res: Response) => {
+    try {
+        const collectionId = parseInt(req.params.id);
+        const { handle } = req.params;
+
+        let targetCollectionId: number;
+
+        if (handle) {
+            // Get by handle
+            const collection = await getCategoryByHandle(handle);
+            if (!collection) {
+                return res.status(404).json({ success: false, error: 'Collection not found' });
+            }
+            targetCollectionId = collection.id;
+        } else if (collectionId) {
+            // Get by ID
+            if (isNaN(collectionId) || collectionId <= 0) {
+                return res.status(400).json({ success: false, error: 'Invalid collection ID' });
+            }
+            targetCollectionId = collectionId;
+        } else {
+            return res
+                .status(400)
+                .json({ success: false, error: 'Collection ID or handle required' });
+        }
+
+        // Use the service function to get filters
+        const filters = await getCollectionFilters(targetCollectionId);
+
+        res.json({
+            success: true,
+            data: filters,
+        });
+    } catch (error) {
+        console.error('Error fetching collection filters:', error);
+        res.status(500).json({ success: false, error: 'Failed to fetch filters' });
     }
 });
 

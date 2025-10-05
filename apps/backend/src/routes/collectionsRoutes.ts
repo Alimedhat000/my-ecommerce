@@ -8,7 +8,7 @@ const router = express.Router();
  * /collections/{id}/products:
  *   get:
  *     summary: Get products by collection
- *     description: Retrieve all published products in a specific collection
+ *     description: Retrieve all published products in a specific collection, with pagination, filters, and sorting
  *     tags: [Collections]
  *     parameters:
  *       - in: path
@@ -32,6 +32,55 @@ const router = express.Router();
  *           maximum: 100
  *           default: 20
  *         description: Number of products per page
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           enum: [title, createdAt, updatedAt, publishedAt]
+ *           default: createdAt
+ *         description: Field to sort by
+ *       - in: query
+ *         name: sortOrder
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
+ *         description: Sort order
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [ACTIVE, INACTIVE, DRAFT]
+ *         description: Filter by product status
+ *       - in: query
+ *         name: vendor
+ *         schema:
+ *           type: string
+ *         description: Filter by vendor
+ *       - in: query
+ *         name: tags
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *         style: form
+ *         explode: false
+ *         description: Filter by tags (comma separated or repeated query param)
+ *       - in: query
+ *         name: minPrice
+ *         schema:
+ *           type: number
+ *         description: Minimum price filter
+ *       - in: query
+ *         name: maxPrice
+ *         schema:
+ *           type: number
+ *         description: Maximum price filter
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search query (matches title or description)
  *     responses:
  *       200:
  *         description: Products retrieved successfully
@@ -56,11 +105,179 @@ const router = express.Router();
  *                     productsCount:
  *                       type: integer
  *                       example: 15
+ *                     totalCount:
+ *                       type: integer
+ *                       example: 150
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 10
+ *                     currentPage:
+ *                       type: integer
+ *                       example: 2
  *       400:
  *         description: Invalid collection ID
  *       500:
  *         description: Server error
  */
 router.get('/:id/products', productController.getProductsByCollectionEndpoint);
+
+/**
+ * @swagger
+ * /collections/handle/{handle}/products:
+ *   get:
+ *     summary: Get products by collection handle
+ *     description: Retrieve all published products in a specific collection by its handle with pagination, sorting, and filtering support
+ *     tags: [Collections]
+ *     parameters:
+ *       - in: path
+ *         name: handle
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Collection handle (e.g. "summer-shirts")
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 20
+ *         description: Number of products to return per page
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           enum: [manual, price-asc, price-desc, date-asc, date-desc, alpha-asc, alpha-desc]
+ *           default: manual
+ *         description: |
+ *           Sort products by various criteria:
+ *           - manual: Featured products (sorted by variant position)
+ *           - price-asc: Price low to high
+ *           - price-desc: Price high to low
+ *           - date-asc: Date old to new
+ *           - date-desc: Date new to old
+ *           - alpha-asc: Alphabetically A to Z
+ *           - alpha-desc: Alphabetically Z to A
+ *       - in: query
+ *         name: vendor
+ *         schema:
+ *           type: string
+ *         description: Filter by brand/vendor
+ *       - in: query
+ *         name: productType
+ *         schema:
+ *           type: string
+ *         description: Filter by product type (T-Shirt, Hoodie, etc.)
+ *       - in: query
+ *         name: gender
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *         style: form
+ *         explode: false
+ *         description: Filter by gender (Men, Women, Unisex) - comma separated or repeated parameter
+ *       - in: query
+ *         name: size
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *         style: form
+ *         explode: false
+ *         description: Filter by size (S, M, L, XL, etc.) - comma separated or repeated parameter
+ *       - in: query
+ *         name: color
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *         style: form
+ *         explode: false
+ *         description: Filter by color (Black, White, Red, etc.) - comma separated or repeated parameter
+ *       - in: query
+ *         name: minPrice
+ *         schema:
+ *           type: number
+ *         description: Minimum price filter
+ *       - in: query
+ *         name: maxPrice
+ *         schema:
+ *           type: number
+ *         description: Maximum price filter
+ *     responses:
+ *       200:
+ *         description: Products retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Product'
+ *                 meta:
+ *                   type: object
+ *                   properties:
+ *                     collectionId:
+ *                       type: integer
+ *                       example: 12
+ *                     collectionHandle:
+ *                       type: string
+ *                       example: "summer-shirts"
+ *                     productsCount:
+ *                       type: integer
+ *                       example: 15
+ *                     totalCount:
+ *                       type: integer
+ *                       example: 45
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 3
+ *                     currentPage:
+ *                       type: integer
+ *                       example: 1
+ *       400:
+ *         description: Invalid collection handle or parameters
+ *       404:
+ *         description: Collection not found
+ *       500:
+ *         description: Server error
+ */
+
+router.get('/handle/:handle/products', productController.getProductsByCollectionHandleEndpoint);
+
+/**
+ * @swagger
+ * /collections/handle/{handle}/filters:
+ *   get:
+ *     summary: Get available filters for a collection by handle
+ *     description: Retrieve all available filter options for products in a collection by its handle
+ *     tags: [Collections]
+ *     parameters:
+ *       - in: path
+ *         name: handle
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Collection handle
+ *     responses:
+ *       200:
+ *         description: Filters retrieved successfully
+ *       404:
+ *         description: Collection not found
+ */
+router.get('/handle/:handle/filters', productController.getCollectionFiltersEndpoint);
 
 export default router;

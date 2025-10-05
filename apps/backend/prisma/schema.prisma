@@ -90,17 +90,18 @@ model ProductCollection {
 }
 
 model Product {
-  id          Int           @id @default(autoincrement())
-  shopifyId   String?       @unique
-  title       String
-  handle      String        @unique //url friendly identifier 
-  bodyHtml    String? // Rich text description
-  vendor      String? // brand or manufacturer
-  tags        String[] // array of tags for search/filter
-  status      ProductStatus @default(DRAFT)
-  publishedAt DateTime?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id           Int           @id @default(autoincrement())
+  shopifyId    String?       @unique
+  title        String
+  handle       String        @unique //url friendly identifier 
+  bodyHtml     String? // Rich text description
+  vendor       String? // brand or manufacturer
+  tags         String[] // array of tags for search/filter
+  product_type String? // e.g., "T-Shirt", "Mug"
+  status       ProductStatus @default(DRAFT)
+  publishedAt  DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
   // SEO fields
   seoTitle       String?

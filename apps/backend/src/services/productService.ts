@@ -184,12 +184,196 @@ export async function getProductByHandle(handle: string) {
 
 export async function getProductsByCollection(
     collectionId: number,
-    pagination: PaginationOptions = {}
+    pagination: PaginationOptions = {},
+    filters: ProductFilters = {}
 ) {
-    const { page = 1, limit = 20 } = pagination;
+    const { page = 1, limit = 20, sortBy = 'createdAt', sortOrder = 'desc' } = pagination;
     const skip = (page - 1) * limit;
 
-    return prisma.product.findMany({
+    const where: any = {
+        collections: {
+            some: {
+                collectionId,
+            },
+        },
+        status: filters.status ?? ProductStatus.ACTIVE,
+    };
+
+    if (filters.vendor) {
+        where.vendor = filters.vendor;
+    }
+
+    if (filters.tags && filters.tags.length > 0) {
+        where.tags = {
+            hasSome: filters.tags,
+        };
+    }
+
+    if (filters.priceRange) {
+        where.variants = {
+            some: {
+                price: {
+                    gte: filters.priceRange.min ?? undefined,
+                    lte: filters.priceRange.max ?? undefined,
+                },
+            },
+        };
+    }
+
+    if (filters.search) {
+        where.OR = [
+            { title: { contains: filters.search, mode: 'insensitive' } },
+            { description: { contains: filters.search, mode: 'insensitive' } },
+        ];
+    }
+
+    // Product Type filter
+    if (filters.productType) {
+        where.product_type = filters.productType;
+    }
+
+    // Gender filter (from tags)
+    if (filters.gender && filters.gender.length > 0) {
+        // Combine with existing tags filter if it exists
+        if (where.tags) {
+            where.tags.hasSome = [...where.tags.hasSome, ...filters.gender];
+        } else {
+            where.tags = {
+                hasSome: filters.gender,
+            };
+        }
+    }
+
+    if (filters.inStock) {
+        where.variants = {
+            ...where.variants,
+            some: {
+                ...where.variants?.some,
+                available: true,
+            },
+        };
+    }
+
+    // If both inStock and other variant filters exist, combine them
+    if (filters.inStock && (filters.size || filters.color)) {
+        where.variants = {
+            ...where.variants,
+            some: {
+                ...where.variants?.some,
+                available: true,
+                // Keep existing size/color filters if they exist
+                ...(filters.size && { option2: { in: filters.size } }),
+                ...(filters.color && { option1: { in: filters.color } }),
+            },
+        };
+    } else {
+        // Handle size and color filters separately if no inStock filter
+        if (filters.size && filters.size.length > 0) {
+            where.variants = {
+                ...where.variants,
+                some: {
+                    ...where.variants?.some,
+                    option2: {
+                        in: filters.size,
+                    },
+                },
+            };
+        }
+
+        if (filters.color && filters.color.length > 0) {
+            where.variants = {
+                ...where.variants,
+                some: {
+                    ...where.variants?.some,
+                    option1: {
+                        in: filters.color,
+                    },
+                },
+            };
+        }
+    }
+
+    let products: any[] = [];
+    let totalCount: number;
+
+    // For variant-related sorting (price and position), we need to sort in memory
+    if (sortBy === 'variants.price' || sortBy === 'variants.position') {
+        // Get all products first (without pagination) for in-memory sorting
+        [products, totalCount] = await Promise.all([
+            prisma.product.findMany({
+                where,
+                include: {
+                    variants: {
+                        orderBy: { position: 'asc' },
+                    },
+                    images: { orderBy: { position: 'asc' } },
+                },
+            }),
+            prisma.product.count({ where }),
+        ]);
+
+        // Sort products in memory based on the specified criteria
+        products.sort((a, b) => {
+            if (sortBy === 'variants.price') {
+                // Get the minimum price from variants for each product
+                const getMinPrice = (product: any): number => {
+                    if (!product.variants || product.variants.length === 0) return 0;
+                    const prices = product.variants.map((v: any) => Number(v.price) || 0);
+                    return Math.min(...prices);
+                };
+
+                const priceA = getMinPrice(a);
+                const priceB = getMinPrice(b);
+
+                if (sortOrder === 'asc') {
+                    return priceA - priceB;
+                } else {
+                    return priceB - priceA;
+                }
+            } else if (sortBy === 'variants.position') {
+                // Sort by the first variant's position
+                const positionA = a.variants[0]?.position ?? 0;
+                const positionB = b.variants[0]?.position ?? 0;
+
+                if (sortOrder === 'asc') {
+                    return positionA - positionB;
+                } else {
+                    return positionB - positionA;
+                }
+            }
+            return 0;
+        });
+
+        // Apply pagination after sorting
+        products = products.slice(skip, skip + limit);
+    } else {
+        // Normal sorting for product fields (not variant fields)
+        [products, totalCount] = await Promise.all([
+            prisma.product.findMany({
+                where,
+                include: {
+                    variants: {
+                        orderBy: { position: 'asc' },
+                    },
+                    images: { orderBy: { position: 'asc' } },
+                },
+                skip,
+                take: limit,
+                orderBy: { [sortBy]: sortOrder },
+            }),
+            prisma.product.count({ where }),
+        ]);
+    }
+
+    return {
+        products,
+        totalCount,
+    };
+}
+
+export async function getCollectionFilters(collectionId: number) {
+    // Get all products in the collection (without pagination to analyze all products)
+    const products = await prisma.product.findMany({
         where: {
             collections: {
                 some: {
@@ -199,19 +383,54 @@ export async function getProductsByCollection(
             status: ProductStatus.ACTIVE,
         },
         include: {
-            variants: {
-                orderBy: { position: 'asc' },
-            },
-            images: {
-                orderBy: { position: 'asc' },
-            },
-        },
-        skip,
-        take: limit,
-        orderBy: {
-            createdAt: 'desc',
+            variants: true,
         },
     });
+
+    // Extract unique values for each filter category
+
+    // Brand filter - from vendor field
+    const vendors = [...new Set(products.map((p) => p.vendor).filter(Boolean))].sort();
+
+    // Product Type filter - from productType field
+    const productTypes = [...new Set(products.map((p) => p.product_type).filter(Boolean))].sort();
+
+    // Gender filter - extract from tags
+    const genderTags = products.flatMap((p) =>
+        p.tags.filter((tag) =>
+            ['men', 'women', 'unisex', 'mens', 'womens'].includes(tag.toLowerCase())
+        )
+    );
+    const genders = [...new Set(genderTags)].sort();
+
+    // Size filter - from variants.option2
+    const sizes = [
+        ...new Set(products.flatMap((p) => p.variants.map((v) => v.option2).filter(Boolean))),
+    ].sort();
+
+    // Color filter - from variants.option1
+    const colors = [
+        ...new Set(products.flatMap((p) => p.variants.map((v) => v.option1).filter(Boolean))),
+    ].sort();
+
+    // Price range - calculate min/max from all variant prices
+    const allPrices = products.flatMap((p) => p.variants.map((v) => Number(v.price) || 0));
+    const priceRange = {
+        min: allPrices.length > 0 ? Math.floor(Math.min(...allPrices)) : 0,
+        max: allPrices.length > 0 ? Math.ceil(Math.max(...allPrices)) : 1000,
+    };
+
+    // Return the structured filter data
+    return {
+        vendors,
+        productTypes,
+        genders,
+        sizes,
+        colors,
+        priceRange,
+        // Optional: total product count for reference
+        totalProducts: products.length,
+    };
 }
 
 //! Admin only services
