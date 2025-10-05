@@ -15,7 +15,6 @@ interface FiltersProps {
 
 export function Filters({ collectionHandle, initialFilters }: FiltersProps) {
   const filters = initialFilters;
-  console.log(filters);
 
   const {
     searchParams,
