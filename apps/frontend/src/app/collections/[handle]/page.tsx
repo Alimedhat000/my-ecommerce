@@ -60,7 +60,7 @@ export async function generateMetadata({
   const { handle } = await params;
 
   return {
-    title: `${formatHandle(handle)} | Your Store`,
+    title: `${formatHandle(handle)} | Revan`,
     description: `Discover our ${formatHandle(handle)} collection. Shop the latest styles and trends now.`,
   };
 }
