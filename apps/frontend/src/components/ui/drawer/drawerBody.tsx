@@ -10,7 +10,10 @@ export const DrawerBody = ({
   ...props
 }: DrawerBodyProps) => {
   return (
-    <div className={`flex-1 overflow-y-auto p-4 ${className}`} {...props}>
+    <div
+      className={`bg-foreground flex-1 overflow-y-auto p-4 ${className}`}
+      {...props}
+    >
       {children}
     </div>
   );

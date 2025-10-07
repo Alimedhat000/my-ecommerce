@@ -58,6 +58,10 @@ interface CartContextType {
   updateQuantity: (variantId: string, quantity: number) => void;
   clearCart: () => void;
   isLoading: boolean;
+
+  isCartDrawerOpen: boolean;
+  openCartDrawer: () => void;
+  closeCartDrawer: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -69,6 +73,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     itemCount: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
 
   const calculateTotals = useCallback((items: CartItem[]): Cart => {
     const itemCount = items.reduce((sum, items) => sum + items.quantity, 0);
@@ -135,6 +140,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         cartStorage.saveCart(newCart);
         return newCart;
       });
+
+      // setIsCartDrawerOpen(true);
     },
     [calculateTotals]
   );
@@ -177,6 +184,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     cartStorage.clearCart();
   }, []);
 
+  const openCartDrawer = useCallback(() => {
+    setIsCartDrawerOpen(true);
+  }, []);
+
+  const closeCartDrawer = useCallback(() => {
+    setIsCartDrawerOpen(false);
+  }, []);
+
   return (
     <CartContext.Provider
       value={{
@@ -186,6 +201,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         updateQuantity,
         clearCart,
         isLoading,
+        isCartDrawerOpen,
+        openCartDrawer,
+        closeCartDrawer,
       }}
     >
       {children}

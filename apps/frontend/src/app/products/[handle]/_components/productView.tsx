@@ -14,7 +14,7 @@ export const ProductView = ({ product }) => {
   };
 
   return (
-    <section className="grid-rows-auto grid grid-cols-1 items-start gap-x-12 gap-y-10 p-12 lg:grid-cols-2">
+    <section className="grid-rows-auto mt-10 grid grid-cols-1 items-start gap-x-12 gap-y-10 lg:grid-cols-2">
       <ProductGallery
         images={product.images.map((img: ProductImage) => img.src)}
         title={product.title}

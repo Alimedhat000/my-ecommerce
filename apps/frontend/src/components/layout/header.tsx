@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { ChevronDown, Search, ShoppingBag, User } from 'lucide-react';
 import React from 'react';
+import { CartDrawer } from './drawers/cartDrawer';
 
 export default function Header({ isHome }: { isHome: boolean }) {
   return (
@@ -65,14 +66,12 @@ export default function Header({ isHome }: { isHome: boolean }) {
             <User className="h-5 w-5" />
             <span className="sr-only">Account</span>
           </li>
-          <li className="relative cursor-pointer">
-            <ShoppingBag className="h-5 w-5" />
-            <span className="sr-only">Cart</span>
-            {/* Cart badge */}
-            <span className="bg-foreground text-background absolute -top-2 -right-2 rounded-full px-1.5 py-0.5 text-xs">
-              2
-            </span>
-          </li>
+          <CartDrawer>
+            <li className="relative cursor-pointer">
+              <ShoppingBag className="h-5 w-5" />
+              <span className="sr-only">Cart</span>
+            </li>
+          </CartDrawer>
         </ul>
       </div>
     </header>

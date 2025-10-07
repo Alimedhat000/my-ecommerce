@@ -1,4 +1,5 @@
 import { HTMLAttributes, ReactNode } from 'react';
+import { useDrawerAnimation } from './drawer';
 
 interface DrawerContentProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
@@ -9,12 +10,20 @@ export const DrawerContent = ({
   className = '',
   ...props
 }: DrawerContentProps) => {
+  const { isContentVisible } = useDrawerAnimation();
+
   return (
     <div
-      className={`flex h-full w-full flex-col bg-white shadow-2xl ${className}`}
+      className={`text-background bg-foreground font-body flex h-full w-full flex-col rounded-2xl shadow-2xl ${className}`}
       {...props}
     >
-      {children}
+      <div
+        className={`relative flex h-full w-full flex-col transition-opacity duration-200 ease-in-out ${
+          isContentVisible ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        {children}
+      </div>
     </div>
   );
 };

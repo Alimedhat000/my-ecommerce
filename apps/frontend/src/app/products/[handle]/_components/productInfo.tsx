@@ -4,6 +4,9 @@ import { useState, useMemo } from 'react';
 import { Minus, Plus, Ruler } from 'lucide-react';
 import { mapNameToHex } from '@/utils/mapNameToHex';
 import { ProductImage } from '@/types/collection';
+import { useCart } from '@/contexts/cartContext';
+import { CartItem } from '@/types/cart';
+import { QuickAddDrawer } from '@/components/layout/drawers/quickAddDrawer';
 
 interface Variant {
   id: number;
@@ -31,7 +34,7 @@ interface Option {
   values: string[];
 }
 
-interface Product {
+export interface Product {
   id: number;
   title: string;
   vendor: string;
@@ -67,6 +70,9 @@ export default function ProductInfo({
   const [selectedColor, setSelectedColor] = useState(colors[0]?.name || '');
   const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState(1);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+
+  const { addItem } = useCart();
 
   // Get available variants for the selected color
   const availableVariantsForSelectedColor = useMemo(() => {
@@ -157,6 +163,36 @@ export default function ProductInfo({
   // Helper to convert hex to Tailwind-compatible style
   const getColorStyle = (hex: string) => ({ backgroundColor: hex });
 
+  const handleAddToCart = async () => {
+    if (isAddingToCart || !selectedVariant || !selectedVariant.available)
+      return;
+
+    setIsAddingToCart(true);
+
+    try {
+      const cartItem: Omit<CartItem, 'quantity'> = {
+        variantId: selectedVariant.shopifyId,
+        productId: product.id.toString(),
+        productHandle: product.title.toLowerCase().replace(/\s+/g, '-'),
+        title: product.title,
+        variantTitle: `${selectedColor}${selectedSize ? ` / ${selectedSize}` : ''}`,
+        price: parseFloat(selectedVariant.price),
+        compareAtPrice: selectedVariant.compareAtPrice
+          ? parseFloat(selectedVariant.compareAtPrice)
+          : undefined,
+        image: selectedVariant.image?.src || product.images[0]?.src || '',
+        available: selectedVariant.available,
+        vendor: product.vendor,
+        color: selectedVariant.option1 ?? '',
+        size: selectedVariant.option2 ?? '',
+      };
+
+      addItem(cartItem, quantity);
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6">
       {/* Vendor & Title */}
@@ -205,15 +241,13 @@ export default function ProductInfo({
                   key={color.name}
                   onClick={() => handleColorChange(color.name)}
                   style={getColorStyle(color.hex)}
-                  className={`relative h-8 w-8 rounded-full border-2 ${
-                    isSelected
+                  className={`relative h-8 w-8 rounded-full border-2 ${isSelected
                       ? 'border-black ring-2 ring-black ring-offset-2'
                       : 'border-muted-foreground'
-                  } ${
-                    !isAvailable
+                    } ${!isAvailable
                       ? 'ring-destructive cursor-not-allowed opacity-50 ring-2 ring-offset-2'
                       : 'cursor-pointer'
-                  }`}
+                    }`}
                   aria-label={`Select ${color.name} color`}
                   disabled={!isAvailable}
                   title={!isAvailable ? 'Out of stock' : `Select ${color.name}`}
@@ -244,17 +278,15 @@ export default function ProductInfo({
                 <button
                   key={size}
                   onClick={() => handleSizeChange(size)}
-                  className={`relative flex h-12 items-center justify-center rounded-3xl border-2 px-6 transition-colors ${
-                    isSelected
+                  className={`relative flex h-12 items-center justify-center rounded-3xl border-2 px-6 transition-colors ${isSelected
                       ? 'border-black bg-black text-white'
                       : isAvailable
                         ? 'border-muted-foreground hover:bg-gray-100'
                         : 'border-muted-foreground opacity-50'
-                  } ${
-                    !isAvailable
+                    } ${!isAvailable
                       ? 'ring- cursor-not-allowed ring-2 ring-offset-2'
                       : 'cursor-pointer'
-                  }`}
+                    }`}
                   disabled={!isAvailable}
                   title={!isAvailable ? 'Out of stock' : `Select ${size}`}
                 >
@@ -307,15 +339,32 @@ export default function ProductInfo({
 
       {/* Buy Buttons */}
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
-        <button
-          className="bg-brand-orange hover:bg-brand-orange/80 flex-1 rounded-4xl py-4 text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-          disabled={!selectedVariant || !selectedVariant.available}
+        <QuickAddDrawer
+          item={{
+            title: selectedVariant?.title || '',
+            image: selectedVariant?.image?.src || product.images[0]?.src || '',
+            price: parseFloat(selectedVariant?.price || '0'),
+            quantity: quantity,
+            variantId: selectedVariant?.id.toString() || '',
+            variantTitle: `${selectedColor}${selectedSize ? ` / ${selectedSize}` : ''}`,
+          }}
         >
-          Add to cart
-        </button>
+          <button
+            className="bg-brand-orange hover:bg-brand-orange/80 flex-1 rounded-4xl py-4 text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={
+              !selectedVariant || !selectedVariant.available || isAddingToCart
+            }
+            onClick={handleAddToCart}
+          >
+            {isAddingToCart ? 'Adding...' : 'Add to cart'}
+          </button>
+        </QuickAddDrawer>
+
         <button
           className="bg-foreground hover:bg-foreground/80 flex-1 rounded-3xl py-4 text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-          disabled={!selectedVariant || !selectedVariant.available}
+          disabled={
+            !selectedVariant || !selectedVariant.available || isAddingToCart
+          }
         >
           Buy it now
         </button>
