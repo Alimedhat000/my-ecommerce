@@ -6,7 +6,7 @@ import { FormField } from '../_components/formField';
 export default function LoginPage() {
   return (
     <div className="flex h-screen w-screen flex-col items-center justify-center">
-      <div className="min-w-[450px] rounded-2xl bg-[#ececec] p-9">
+      <div className="min-w-[450px] rounded-2xl bg-[#ececec] p-9 shadow-sm">
         <h1 className="flex justify-center pb-5 focus:ring-0">
           <Link href="/">
             <Image
