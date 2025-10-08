@@ -60,7 +60,7 @@ export async function generateMetadata({
   const { handle } = await params;
 
   return {
-    title: `${formatHandle(handle)} | Your Store`,
+    title: `${formatHandle(handle)} | Revan`,
     description: `Discover our ${formatHandle(handle)} collection. Shop the latest styles and trends now.`,
   };
 }
@@ -120,7 +120,7 @@ export default async function CollectionPage({
         </h1>
       </div>
 
-      <section className="mx-12" aria-label="Product Listings">
+      <section className="md:mx-12" aria-label="Product Listings">
         <div className="mt-12 grid grid-cols-[minmax(0,1fr)] gap-12 md:grid-cols-[250px_minmax(0,1fr)]">
           <div className="col-span-2 hidden grid-cols-[inherit] items-center justify-between gap-x-[inherit] md:grid">
             <div className="flex items-center gap-3 font-medium">

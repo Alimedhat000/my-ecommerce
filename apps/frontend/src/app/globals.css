@@ -188,7 +188,15 @@ body {
 header,
 main,
 footer {
-  padding: 2.125rem max(3rem, 50% - var(--max-width) / 2);
+  padding: 2.125rem max(1.25rem, 50% - var(--max-width) / 2);
+}
+
+@media (min-width: 768px) {
+  header,
+  main,
+  footer {
+    padding: 2.125rem max(3rem, 50% - var(--max-width) / 2);
+  }
 }
 
 main {
