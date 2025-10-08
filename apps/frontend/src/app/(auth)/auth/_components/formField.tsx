@@ -3,12 +3,15 @@ import * as React from 'react';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { UseFormRegisterReturn } from 'react-hook-form';
 
 interface FormFieldProps extends React.ComponentProps<'input'> {
   id: string;
   label: string;
   variant?: 'default' | 'brand';
   containerClassName?: string;
+  register?: UseFormRegisterReturn;
+  error?: string;
 }
 
 export function FormField({
@@ -18,6 +21,8 @@ export function FormField({
   variant = 'default',
   containerClassName,
   className,
+  register,
+  error,
   ...props
 }: FormFieldProps) {
   const [hasValue, setHasValue] = React.useState(false);
@@ -25,11 +30,13 @@ export function FormField({
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     setHasValue(e.target.value !== '');
     props.onBlur?.(e);
+    register?.onBlur(e);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setHasValue(e.target.value !== '');
     props.onChange?.(e);
+    register?.onChange(e);
   };
 
   const isLabelFloating = hasValue;
@@ -44,6 +51,8 @@ export function FormField({
         onBlur={handleBlur}
         onChange={handleChange}
         placeholder=" "
+        aria-invalid={error ? 'true' : 'false'}
+        {...(register ? { name: register.name, ref: register.ref } : {})}
         {...props}
       />
       <Label
@@ -57,6 +66,7 @@ export function FormField({
       >
         {label}
       </Label>
+      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
   );
 }
