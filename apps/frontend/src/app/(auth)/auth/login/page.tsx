@@ -6,9 +6,9 @@ import { FormField } from '../_components/formField';
 export default function LoginPage() {
   return (
     <div className="flex h-screen w-screen flex-col items-center justify-center">
-      <div className="w-full max-w-[373px] rounded-2xl bg-[#ececec] p-9">
-        <h1 className="pb-5">
-          <Link href="/" className="flex justify-center">
+      <div className="min-w-[450px] rounded-2xl bg-[#ececec] p-9">
+        <h1 className="flex justify-center pb-5 focus:ring-0">
+          <Link href="/">
             <Image
               src="/logo.svg"
               alt="Site Logo"
@@ -19,14 +19,16 @@ export default function LoginPage() {
           </Link>
         </h1>
 
-        <h2 className="pb-4 text-center text-xl">Sign In</h2>
-
         <form className="flex flex-col space-y-4">
           <FormField id="email" label="Email" type="email" />
 
           <FormField id="password" label="Password" type="password" />
 
-          <Button type="submit" className="bg-foreground w-full rounded-lg">
+          <Button
+            type="submit"
+            size={'lg'}
+            className="bg-foreground text-md w-full rounded-lg"
+          >
             Sign In
           </Button>
         </form>

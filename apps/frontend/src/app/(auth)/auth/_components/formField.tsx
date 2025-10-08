@@ -20,12 +20,9 @@ export function FormField({
   className,
   ...props
 }: FormFieldProps) {
-  const [isFocused, setIsFocused] = React.useState(false);
   const [hasValue, setHasValue] = React.useState(false);
 
-  const handleFocus = () => setIsFocused(true);
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    setIsFocused(false);
     setHasValue(e.target.value !== '');
     props.onBlur?.(e);
   };
@@ -35,7 +32,7 @@ export function FormField({
     props.onChange?.(e);
   };
 
-  const isLabelFloating = isFocused || hasValue;
+  const isLabelFloating = hasValue;
 
   return (
     <div className={cn('relative', containerClassName)}>
@@ -43,8 +40,7 @@ export function FormField({
         id={id}
         type={type}
         variant={variant}
-        className={cn('peer pt-6 pb-2', className)}
-        onFocus={handleFocus}
+        className={cn('peer h-13 pt-4 pb-2', className)}
         onBlur={handleBlur}
         onChange={handleChange}
         placeholder=" "
