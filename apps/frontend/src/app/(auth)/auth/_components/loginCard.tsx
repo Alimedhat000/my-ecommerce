@@ -7,6 +7,10 @@ import { FormField } from '../_components/formField';
 import z from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuth } from '@/contexts/authContext';
+import { api } from '@/api/client';
+import { useEffect } from 'react';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -16,6 +20,18 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export const LoginCard = () => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { login, isAuthenticated } = useAuth();
+
+  const redirectUrl = searchParams.get('redirect') || '/';
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push(redirectUrl);
+    }
+  }, [isAuthenticated, router, redirectUrl]);
+
   const {
     register,
     handleSubmit,
@@ -25,8 +41,19 @@ export const LoginCard = () => {
   });
 
   const onSubmit = async (data: LoginFormValues) => {
-    console.log('Form data:', data);
-    // Add your login logic here
+    try {
+      const res = await api.post('/auth/login', data);
+
+      if (res.data) {
+        const { accessToken, user } = res.data.data;
+        login(accessToken, user);
+        router.push('/'); // or wherever you want to redirect
+      }
+    } catch (err) {
+      console.error('Login failed:', err);
+      // Optional: Show error message to user
+      // setError('Invalid credentials');
+    }
   };
 
   return (

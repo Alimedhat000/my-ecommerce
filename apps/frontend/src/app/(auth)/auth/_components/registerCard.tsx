@@ -8,6 +8,10 @@ import Link from 'next/link';
 import z from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { api } from '@/api/client';
+import { useAuth } from '@/contexts/authContext';
+import { useEffect } from 'react';
 
 const registerSchema = z.object({
   name: z.string().min(5, 'Name must be more than 5 characters'),
@@ -18,12 +22,39 @@ const registerSchema = z.object({
 type FormValues = z.infer<typeof registerSchema>;
 
 export const RegisterCard = () => {
+  const router = useRouter();
+  const { login, isAuthenticated } = useAuth();
+  const searchParams = useSearchParams();
+
+  const redirectUrl = searchParams.get('redirect') || '/';
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push(redirectUrl);
+    }
+  }, [isAuthenticated, router, redirectUrl]);
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({ resolver: zodResolver(registerSchema) });
 
+  const onSubmit = async (data: FormValues) => {
+    try {
+      const res = await api.post(`/auth/register`, data);
+
+      if (res.data.success) {
+        const { accessToken, user } = res.data.data;
+        login(accessToken, user);
+        router.push('/');
+      }
+    } catch {
+      console.error('Registration failed:');
+      // Optional: show error message to user
+      // const errorMessage = err.response?.data?.message || 'Registration failed';
+    }
+  };
   return (
     <div className="min-w-[450px] rounded-2xl bg-[#ececec] p-9 shadow-sm">
       <h1 className="flex justify-center pb-5 focus:ring-0">
@@ -38,7 +69,10 @@ export const RegisterCard = () => {
         </Link>
       </h1>
 
-      <form className="flex flex-col space-y-4">
+      <form
+        className="flex flex-col space-y-4"
+        onSubmit={handleSubmit(onSubmit)}
+      >
         <FormField
           id="name"
           label="Full Name"
