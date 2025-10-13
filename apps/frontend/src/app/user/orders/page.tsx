@@ -1,6 +1,14 @@
+import { Metadata } from 'next';
+
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: 'Orders - Account',
+  };
+}
+
 export default function Page() {
   const orders = [
-    // { id: 1, date: '2 Nov 2025', items: [{ id: 1 }, { id: 2 }], total: 50 },
+    { id: 1, date: '2 Nov 2025', items: [{ id: 1 }, { id: 2 }], total: 50 },
     // { id: 1, date: '2 Nov 2025', items: [{ id: 1 }, { id: 2 }], total: 50 },
     // { id: 1, date: '2 Nov 2025', items: [{ id: 1 }, { id: 2 }], total: 50 },
   ]; // Replace with fetched or passed data later

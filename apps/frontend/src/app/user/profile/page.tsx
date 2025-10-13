@@ -1,4 +1,10 @@
-import { Pen } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
+import { Metadata } from 'next';
+import ProfileInfo from './_components/profileInfo';
+
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: 'Profile - Account' };
+}
 
 export default function Page() {
   const user = {
@@ -11,27 +17,8 @@ export default function Page() {
     <main className="flex flex-col gap-7">
       <h1 className="text-2xl font-semibold">Profile</h1>
 
-      {/* Profile Info */}
-      <section className="rounded-2xl bg-[#EDEDED] p-6">
-        <div className="flex flex-col gap-4">
-          <div>
-            <span className="text-gray-600">Name</span>
-            <div className="flex items-center gap-2">
-              <span className="text-gray-800">
-                {user.name || (
-                  <span className="text-gray-400 italic">Not set</span>
-                )}
-              </span>
-              <Pen className="w-4 text-orange-500" />
-            </div>
-          </div>
-
-          <div>
-            <span className="text-gray-600">Email</span>
-            <div className="text-gray-800">{user.email}</div>
-          </div>
-        </div>
-      </section>
+      {/* Editable Profile Info */}
+      <ProfileInfo user={user} />
 
       {/* Addresses */}
       <section className="rounded-2xl bg-[#EDEDED] p-6">
@@ -45,20 +32,7 @@ export default function Page() {
         {user.addresses.length === 0 ? (
           <div className="flex items-center justify-center rounded-xl border border-gray-200 bg-white p-5 text-gray-600">
             <span className="flex items-center gap-2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                stroke="currentColor"
-                className="h-5 w-5"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 9v3.75m0 3.75h.007v.008H12v-.008z"
-                />
-              </svg>
+              <AlertCircle />
               No addresses added
             </span>
           </div>
@@ -116,7 +90,7 @@ export default function Page() {
 
           <button
             type="submit"
-            className="mt-2 w-fit rounded-lg bg-orange-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-orange-600"
+            className="mt-1 w-fit rounded-lg bg-orange-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-orange-600"
           >
             Update Password
           </button>
