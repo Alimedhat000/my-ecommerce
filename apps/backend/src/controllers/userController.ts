@@ -14,7 +14,8 @@ export const getMe = catchAsync(async (req: AuthRequest, res) => {
             updatedAt: true,
         },
     });
-    res.status(202).json({ success: true, user });
+
+    return res.status(200).json({ success: true, user });
 });
 
 interface UpdateMeBody {
@@ -31,12 +32,13 @@ export const updateMe = catchAsync(
                 where: { email },
             });
             if (existingUser) {
-                res.status(411).json({
+                return res.status(409).json({
                     success: false,
                     message: 'Email already in use',
                 });
             }
         }
+
         const updatedUser = await prisma.user.update({
             where: { id: req.userId },
             data: {
@@ -51,7 +53,7 @@ export const updateMe = catchAsync(
             },
         });
 
-        res.status(201).json({
+        return res.status(200).json({
             success: true,
             message: 'Profile updated successfully',
             user: updatedUser,
@@ -68,50 +70,63 @@ interface updatePassword {
 export const updatePassword = catchAsync(
     async (req: AuthRequest<unknown, unknown, updatePassword>, res) => {
         const { currentPassword, newPassword, confirmPassword } = req.body;
+
         if (!currentPassword || !newPassword || !confirmPassword) {
-            res.status(401).json({
+            return res.status(400).json({
                 success: false,
-                message: 'Please provide all requiered fields',
+                message: 'Please provide all required fields',
             });
         }
 
         if (newPassword !== confirmPassword) {
-            res.status(401).json({ success: false, message: 'New password do not match' });
+            return res.status(400).json({
+                success: false,
+                message: 'New passwords do not match',
+            });
         }
 
-        if (newPassword.length < 9) {
-            res.status(401).json({
+        if (newPassword.length < 10) {
+            return res.status(400).json({
                 success: false,
-                message: 'Password must be at least 9 characters long',
+                message: 'Password must be at least 10 characters long',
             });
         }
 
         const user = await prisma.user.findUnique({ where: { id: req.userId } });
 
         if (!user) {
-            res.status(405).json({ success: true, message: 'User not found' });
+            return res.status(404).json({
+                success: false,
+                message: 'User not found',
+            });
         }
 
-        const isVaildPass = await bcrypt.compare(currentPassword, user!.password);
+        const isValidPass = await bcrypt.compare(currentPassword, user.password);
 
-        if (!isVaildPass) {
-            res.status(402).json({ success: false, message: 'Current Password is incorrect' });
+        if (!isValidPass) {
+            return res.status(401).json({
+                success: false,
+                message: 'Current password is incorrect',
+            });
         }
 
-        const isSamePass = await bcrypt.compare(newPassword, user!.password);
+        const isSamePass = await bcrypt.compare(newPassword, user.password);
 
-        if (!isSamePass) {
-            res.status(402).json({
+        if (isSamePass) {
+            return res.status(400).json({
                 success: false,
                 message: 'New password must be different from current password',
             });
         }
 
-        const hashedPassword = await bcrypt.hash(newPassword, 13);
+        const hashedPassword = await bcrypt.hash(newPassword, 14);
 
-        await prisma.user.update({ where: { id: req.userId }, data: { password: hashedPassword } });
+        await prisma.user.update({
+            where: { id: req.userId },
+            data: { password: hashedPassword },
+        });
 
-        res.status(201).json({
+        return res.status(200).json({
             success: true,
             message: 'Password updated successfully',
         });
@@ -120,11 +135,15 @@ export const updatePassword = catchAsync(
 
 export const getAddresses = catchAsync(async (req: AuthRequest, res) => {
     const addresses = await prisma.address.findMany({
-        where: { id: req.userId },
+        where: { userId: req.userId },
     });
 
-    res.status(201).json({ success: true, addresses });
+    return res.status(200).json({
+        success: true,
+        addresses,
+    });
 });
+
 interface createAddresses {
     street: string;
     city: string;
@@ -133,6 +152,7 @@ interface createAddresses {
     country: string;
     isDefault: boolean;
 }
+
 export const createAddresses = catchAsync(
     async (req: AuthRequest<unknown, unknown, createAddresses>, res) => {
         const { street, city, state, postalCode, country, isDefault } = req.body;
@@ -156,42 +176,57 @@ export const createAddresses = catchAsync(
             },
         });
 
-        res.status(202).json({
+        return res.status(201).json({
             success: true,
             message: 'Address created successfully',
             address,
         });
     }
 );
+
 interface addressParams {
-    addressId?: number;
+    addressId?: string;
 }
+
 export const updateAddress = catchAsync(
     async (req: AuthRequest<addressParams, unknown, createAddresses>, res) => {
         const { addressId } = req.params;
         const { street, city, state, postalCode, country, isDefault } = req.body;
 
-        // Verify address belongs to user
+        if (!addressId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Address ID is required',
+            });
+        }
+
         const existingAddress = await prisma.address.findFirst({
-            where: { id: addressId, userId: req.userId },
+            where: {
+                id: parseInt(addressId),
+                userId: req.userId,
+            },
         });
 
         if (!existingAddress) {
-            res.status(405).json({
+            return res.status(404).json({
                 success: false,
                 message: 'Address not found',
             });
         }
-        // If setting as default, unset other defaults
+
         if (isDefault) {
             await prisma.address.updateMany({
-                where: { userId: req.userId, isDefault: true, id: { not: addressId } },
+                where: {
+                    userId: req.userId,
+                    isDefault: true,
+                    id: { not: parseInt(addressId) },
+                },
                 data: { isDefault: false },
             });
         }
 
         const updatedAddress = await prisma.address.update({
-            where: { id: addressId },
+            where: { id: parseInt(addressId) },
             data: {
                 ...(street && { street }),
                 ...(city && { city }),
@@ -202,7 +237,7 @@ export const updateAddress = catchAsync(
             },
         });
 
-        res.status(201).json({
+        return res.status(200).json({
             success: true,
             message: 'Address updated successfully',
             address: updatedAddress,
@@ -214,25 +249,38 @@ export const deleteAddress = catchAsync(
     async (req: AuthRequest<addressParams, unknown, unknown>, res) => {
         const { addressId } = req.params;
 
+        if (!addressId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Address ID is required',
+            });
+        }
+
         const address = await prisma.address.findFirst({
-            where: { id: addressId, userId: req.userId },
+            where: {
+                id: parseInt(addressId),
+                userId: req.userId,
+            },
         });
 
         if (!address) {
-            res.status(405).json({ message: 'Address not found', success: false });
+            return res.status(404).json({
+                message: 'Address not found',
+                success: false,
+            });
         }
 
         await prisma.address.delete({
-            where: { id: addressId },
+            where: { id: parseInt(addressId) },
         });
 
-        res.status(201).json({
+        return res.status(200).json({
             success: true,
             message: 'Address deleted successfully',
         });
     }
 );
-// Add these interfaces at the top of your userController.ts
+
 interface OrderQuery {
     page?: string;
     limit?: string;
@@ -243,18 +291,17 @@ interface OrderParams {
     orderId?: string;
 }
 
-// Complete getOrders function
 export const getOrders = catchAsync(
     async (req: AuthRequest<unknown, unknown, unknown, OrderQuery>, res) => {
         const { page = '1', limit = '10', status } = req.query;
         const pageNum = parseInt(page);
         const limitNum = parseInt(limit);
 
-        // Build where clause
         const where: {
             userId?: number;
             status?: string;
         } = { userId: req.userId };
+
         if (status) {
             where.status = status;
         }
@@ -272,7 +319,7 @@ export const getOrders = catchAsync(
                                             id: true,
                                             title: true,
                                             images: {
-                                                take: 1,
+                                                take: 2,
                                                 orderBy: { position: 'asc' },
                                             },
                                         },
@@ -290,7 +337,7 @@ export const getOrders = catchAsync(
             prisma.order.count({ where }),
         ]);
 
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             orders,
             pagination: {
@@ -303,7 +350,6 @@ export const getOrders = catchAsync(
     }
 );
 
-// Complete getOrder function
 export const getOrder = catchAsync(async (req: AuthRequest<OrderParams, unknown, unknown>, res) => {
     const { orderId } = req.params;
 
@@ -356,7 +402,7 @@ export const getOrder = catchAsync(async (req: AuthRequest<OrderParams, unknown,
         });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
         success: true,
         order,
     });
