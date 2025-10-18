@@ -48,10 +48,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Setup axios interceptor
   useEffect(() => {
-    // Request interceptor - ensures token is always attached
     const requestInterceptor = api.interceptors.request.use(
       (config) => {
-        // If we have an access token, attach it to every request
         if (accessToken && config.headers) {
           config.headers['Authorization'] = `Bearer ${accessToken}`;
         }
@@ -62,37 +60,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     );
 
-    // Response interceptor - handles token refresh on 401
     const responseInterceptor = api.interceptors.response.use(
       (response) => response,
       async (error) => {
         const originalRequest = error.config;
 
-        // If 401 error and we haven't retried yet
         if (error.response?.status === 401 && !originalRequest._retry) {
           originalRequest._retry = true;
 
           try {
-            // Try to refresh the token
             const res = await api.post('/auth/refresh');
 
             if (res.data.success && res.data.data) {
               const { accessToken: newToken, user: newUser } = res.data.data;
 
-              // Update state and header
               setAccessToken(newToken);
               setUser(newUser);
               api.defaults.headers.common['Authorization'] =
                 `Bearer ${newToken}`;
 
-              // Update the failed request with new token
               originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
 
-              // Retry the original request
               return api(originalRequest);
             }
           } catch (refreshError) {
-            // Refresh failed, logout user
             await logout();
             return Promise.reject(refreshError);
           }
@@ -105,14 +96,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Store interceptor IDs
     interceptorId.current = responseInterceptor;
 
-    // Cleanup: eject interceptors when component unmounts
     return () => {
       api.interceptors.request.eject(requestInterceptor);
       api.interceptors.response.eject(responseInterceptor);
     };
-  }, [accessToken]); // Re-run when accessToken changes
+  }, [accessToken]);
 
-  // Initial token refresh on mount
   useEffect(() => {
     const refresh = async () => {
       if (localStorage.getItem('wasLoggedOut') === 'true') {
