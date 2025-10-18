@@ -121,7 +121,7 @@ export default function ProfileInfo() {
   if (error && !user) {
     return (
       <section className="rounded-2xl bg-[#EDEDED] p-6">
-        <div className="text-center text-red-600">
+        <div className="text-destructive text-center">
           <p>{error}</p>
           <button
             onClick={() => window.location.reload()}
@@ -152,7 +152,7 @@ export default function ProfileInfo() {
       </div>
 
       {error && isEditing && (
-        <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
+        <div className="text-destructive mb-4 rounded-lg bg-red-50 p-3 text-sm">
           {error}
         </div>
       )}
@@ -196,7 +196,9 @@ export default function ProfileInfo() {
               disabled={updateLoading}
             />
             {errors.name && (
-              <p className="mt-1 text-xs text-red-500">{errors.name.message}</p>
+              <p className="text-destructive mt-1 text-xs">
+                {errors.name.message}
+              </p>
             )}
           </div>
 
@@ -219,7 +221,7 @@ export default function ProfileInfo() {
               disabled={updateLoading}
             />
             {errors.email && (
-              <p className="mt-1 text-xs text-red-500">
+              <p className="text-destructive mt-1 text-xs">
                 {errors.email.message}
               </p>
             )}
