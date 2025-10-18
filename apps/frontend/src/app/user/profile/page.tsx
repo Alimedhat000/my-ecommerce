@@ -6,7 +6,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: 'Profile - Account' };
 }
 
-export default function Page() {
+export default async function Page() {
   const user = {
     name: '',
     email: 'alimedhat000@gmail.com',
@@ -18,7 +18,7 @@ export default function Page() {
       <h1 className="text-2xl font-semibold">Profile</h1>
 
       {/* Editable Profile Info */}
-      <ProfileInfo user={user} />
+      <ProfileInfo />
 
       {/* Addresses */}
       <section className="rounded-2xl bg-[#EDEDED] p-6">
