@@ -12,11 +12,42 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { api } from '@/api/client';
 import { useAuth } from '@/contexts/authContext';
 import { useEffect } from 'react';
+import { passwordRequirements } from '@/utils/passwordRequirements';
 
 const registerSchema = z.object({
   name: z.string().min(5, 'Name must be more than 5 characters'),
   email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z
+    .string()
+    .min(
+      passwordRequirements.minLength,
+      `Password must be at least ${passwordRequirements.minLength} characters long`
+    )
+    .refine(
+      (val) => !passwordRequirements.requireLowercase || /[a-z]/.test(val),
+      {
+        message: 'Password must contain at least one lowercase letter',
+      }
+    )
+    .refine(
+      (val) => !passwordRequirements.requireUppercase || /[A-Z]/.test(val),
+      {
+        message: 'Password must contain at least one uppercase letter',
+      }
+    )
+    .refine(
+      (val) => !passwordRequirements.requireNumbers || /[0-9]/.test(val),
+      {
+        message: 'Password must contain at least one number',
+      }
+    )
+    .refine(
+      (val) =>
+        !passwordRequirements.requireSpecialChars || /[^a-zA-Z0-9]/.test(val),
+      {
+        message: 'Password must contain at least one special character',
+      }
+    ),
 });
 
 type FormValues = z.infer<typeof registerSchema>;
