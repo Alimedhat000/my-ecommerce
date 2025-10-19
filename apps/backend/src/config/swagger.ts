@@ -25,7 +25,6 @@ const options: swaggerJsdoc.Options = {
         ],
         tags: [
             { name: 'Auth', description: 'User authentication and authorization' },
-            { name: 'Users', description: 'User management and profiles' },
             { name: 'Products', description: 'Product catalog and details' },
             { name: 'Orders', description: 'Customer orders and order management' },
             { name: 'Payments', description: 'Payment processing and transactions' },

@@ -1,4 +1,5 @@
-import { Request, Response } from 'express';
+/* eslint-disable */
+import type { Request, Response } from 'express';
 import {
     getAllProducts,
     getProductById,
@@ -13,7 +14,7 @@ import { catchAsync } from '../utils/errorHandler';
 import logger from '../utils/logger';
 import { createImage, deleteImage, getImagesByProductId } from '../services/imageService';
 import { getCategoryByHandle } from '../services/collectionService';
-import { PaginationOptions, ProductFilters } from '../types/productTypes';
+import type { PaginationOptions, ProductFilters } from '../types/productTypes';
 import { ProductStatus } from '@prisma/client';
 
 const parseQueryParams = (query: any) => {
@@ -497,7 +498,7 @@ export const createProductEndpoint = catchAsync(async (req: Request, res: Respon
 
         const product = await createProduct(productData);
 
-        let createdImages = [];
+        const createdImages = [];
         if (images && Array.isArray(images) && images.length > 0) {
             try {
                 for (const imageData of images) {

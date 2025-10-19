@@ -3,7 +3,9 @@ import authRoutes from './authRoutes';
 import productRoutes from './productRoutes';
 import adminRoutes from './adminRoutes';
 import collectionsRoutes from './collectionsRoutes';
-import { authorizeAdmin } from '../middleware/authMiddleware';
+import userRoutes from './userRoutes';
+import { authenticate, authorizeAdmin } from '../middleware/authMiddleware';
+import { catchAsync } from '../utils/errorHandler';
 
 const router = Router();
 
@@ -16,4 +18,5 @@ router.use('/collections', collectionsRoutes);
 
 router.use('/admin', authorizeAdmin, adminRoutes);
 
+router.use('/user', catchAsync(authenticate), userRoutes);
 export default router;
