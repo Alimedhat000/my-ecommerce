@@ -314,14 +314,12 @@ export const getOrders = catchAsync(
                         include: {
                             ProductVariant: {
                                 include: {
+                                    image: {
+                                        select: { src: true, width: true, height: true },
+                                    },
                                     product: {
                                         select: {
-                                            id: true,
                                             title: true,
-                                            images: {
-                                                take: 2,
-                                                orderBy: { position: 'asc' },
-                                            },
                                         },
                                     },
                                 },
