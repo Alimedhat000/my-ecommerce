@@ -17,7 +17,7 @@ export default function OrderItemRow({ item }: OrderItemRowProps) {
 
   return (
     <div className="flex gap-4">
-      <div className="w-18 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
+      <div className="h-auto w-18 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
         {item.ProductVariant?.image && (
           <Image
             src={item.ProductVariant.image.src}

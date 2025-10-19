@@ -39,10 +39,23 @@ export interface Order {
   orderItems: OrderItem[];
 }
 
-export default function Page() {
+export interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: { page?: string; limit?: string };
+}) {
+  const page = Number(await searchParams.page) || 1;
+  const limit = Number(await searchParams.limit) || 10;
   return (
     <main className="flex flex-col gap-6">
-      <OrdersContainer />
+      <OrdersContainer initialPage={page} initialLimit={limit} />
     </main>
   );
 }

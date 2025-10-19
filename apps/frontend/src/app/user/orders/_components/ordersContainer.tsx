@@ -2,9 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/api/client';
-import { Order } from '../page';
+import { Order, Pagination } from '../page';
 import OrdersList from './ordersList';
 import EmptyOrders from './emptyOrders';
+import { useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import OrdersPagination from './orderPagination';
 
 function OrdersLoading() {
   return (
@@ -60,18 +63,40 @@ function OrdersLoading() {
   );
 }
 
-export default function OrdersContainer() {
+interface OrdersContainerProps {
+  initialPage: number;
+  initialLimit: number;
+}
+
+export default function OrdersContainer({
+  initialPage,
+  initialLimit,
+}: OrdersContainerProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [orders, setOrders] = useState<Order[]>([]);
+  const [pagination, setPagination] = useState<Pagination | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const currentPage = Number(searchParams.get('page')) || initialPage;
+  const currentLimit = Number(searchParams.get('limit')) || initialLimit;
 
   useEffect(() => {
     async function fetchOrders() {
       try {
         setIsLoading(true);
-        const response = await api.get('/user/orders');
+        setError(null);
+        const response = await api.get('/user/orders', {
+          params: {
+            page: currentPage,
+            limit: currentLimit,
+          },
+        });
+
         setOrders(response.data.orders);
-        console.log(response.data.orders);
+        setPagination(response.data.pagination);
+        console.log(response.data);
       } catch (err) {
         console.error('Failed to fetch orders:', err);
         setError('Failed to load orders. Please try again.');
@@ -81,7 +106,13 @@ export default function OrdersContainer() {
     }
 
     fetchOrders();
-  }, []);
+  }, [currentPage, currentLimit]);
+
+  const handlePageChange = (newPage: number) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('page', newPage.toString());
+    router.push(`?${params.toString()}`);
+  };
 
   if (isLoading) {
     return <OrdersLoading />;
@@ -89,7 +120,7 @@ export default function OrdersContainer() {
 
   if (error) {
     return (
-      <div className="border-red-150 flex flex-col items-center justify-center gap-3 rounded-2xl border bg-red-50 p-14 text-center">
+      <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-red-200 bg-red-50 p-14 text-center">
         <h2 className="text-lg font-medium text-red-900">Error</h2>
         <p className="text-red-600">{error}</p>
         <button
@@ -106,11 +137,34 @@ export default function OrdersContainer() {
     <>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Orders</h1>
-        <span className="text-sm text-gray-500">
-          {orders.length} order{orders.length !== 1 ? 's' : ''}
-        </span>
+        {pagination && (
+          <span className="text-sm text-gray-500">
+            {pagination.total} order{pagination.total !== 1 ? 's' : ''}
+          </span>
+        )}
       </div>
-      {orders.length === 0 ? <EmptyOrders /> : <OrdersList orders={orders} />}
+
+      {orders.length === 0 && pagination ? (
+        <>
+          <EmptyOrders />
+          <OrdersPagination
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            onPageChange={handlePageChange}
+          />
+        </>
+      ) : (
+        <>
+          <OrdersList orders={orders} />
+          {pagination && pagination.totalPages > 1 && (
+            <OrdersPagination
+              currentPage={pagination.page}
+              totalPages={pagination.totalPages}
+              onPageChange={handlePageChange}
+            />
+          )}
+        </>
+      )}
     </>
   );
 }
