@@ -36,7 +36,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = async () => {
     try {
-      await api.post('/auth/logout');
+      await api.post(
+        '/auth/logout',
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         console.debug('Logout request failed (non-critical):', error);
