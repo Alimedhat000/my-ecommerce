@@ -3,6 +3,7 @@ import { ChevronDown, Search, ShoppingBag, User } from 'lucide-react';
 import React from 'react';
 import { CartDrawer } from './drawers/cartDrawer';
 import { useAuth } from '@/contexts/authContext';
+import Link from 'next/link';
 
 export default function Header({ isHome }: { isHome: boolean }) {
   const { isAuthenticated } = useAuth();
@@ -65,12 +66,14 @@ export default function Header({ isHome }: { isHome: boolean }) {
             <span className="sr-only">Search</span>
           </li>
           <li className="relative cursor-pointer">
-            <User className="h-5 w-5" />
-            {/* Green dot indicator */}
-            {isAuthenticated && (
-              <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full border-2 border-white bg-green-500"></span>
-            )}
-            <span className="sr-only">Account</span>
+            <Link href="/user/profile">
+              <User className="h-5 w-5" />
+              {/* Green dot indicator */}
+              {isAuthenticated && (
+                <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full border-2 border-white bg-green-500"></span>
+              )}
+              <span className="sr-only">Account</span>
+            </Link>
           </li>
           <CartDrawer>
             <li className="relative cursor-pointer">
