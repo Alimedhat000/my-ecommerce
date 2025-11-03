@@ -96,9 +96,13 @@ export default function OrdersContainer({
 
         setOrders(response.data.orders);
         setPagination(response.data.pagination);
-        console.log(response.data);
+        if (process.env.NODE_ENV === 'development') {
+          console.debug(response.data);
+        }
       } catch (err) {
-        console.error('Failed to fetch orders:', err);
+        if (process.env.NODE_ENV === 'development') {
+          console.debug('Failed to fetch orders:', err);
+        }
         setError('Failed to load orders. Please try again.');
       } finally {
         setIsLoading(false);

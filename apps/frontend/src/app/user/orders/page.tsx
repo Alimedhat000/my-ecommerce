@@ -51,8 +51,9 @@ export default async function Page({
 }: {
   searchParams: { page?: string; limit?: string };
 }) {
-  const page = Number(await searchParams.page) || 1;
-  const limit = Number(await searchParams.limit) || 10;
+  const params = await searchParams;
+  const page = Number(params.page) || 1;
+  const limit = Number(params.limit) || 10;
   return (
     <main className="flex flex-col gap-6">
       <OrdersContainer initialPage={page} initialLimit={limit} />
