@@ -65,7 +65,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       async (error) => {
         const originalRequest = error.config;
 
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        // Don't retry if it's already a refresh token request
+        if (
+          error.response?.status === 401 &&
+          !originalRequest._retry &&
+          originalRequest.url !== '/auth/refresh'
+        ) {
           originalRequest._retry = true;
 
           try {
@@ -80,10 +85,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 `Bearer ${newToken}`;
 
               originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
-
               return api(originalRequest);
+            } else {
+              throw new Error('Refresh failed');
             }
           } catch (refreshError) {
+            console.error('Token refresh failed:', refreshError);
             await logout();
             return Promise.reject(refreshError);
           }
