@@ -38,7 +38,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       await api.post('/auth/logout');
     } catch (error) {
-      console.error('Logout error:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.debug('Logout request failed (non-critical):', error);
+      }
     }
     setAccessToken(null);
     setUser(null);
@@ -86,13 +88,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
               originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
               return api(originalRequest);
-            } else {
-              throw new Error('Refresh failed');
             }
-          } catch (refreshError) {
-            console.error('Token refresh failed:', refreshError);
-            await logout();
-            return Promise.reject(refreshError);
+          } catch {
+            // Token refresh failed - user will need to re-login
+            if (process.env.NODE_ENV === 'development') {
+              console.debug('Token refresh failed, session expired');
+            }
+            setAccessToken(null);
+            setUser(null);
           }
         }
 
@@ -123,8 +126,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           const { accessToken, user } = res.data.data;
           login(accessToken, user);
         }
-      } catch (error) {
-        console.error('Refresh error:', error);
+      } catch {
+        // No session to restore - this is expected for new users
+        if (process.env.NODE_ENV === 'development') {
+          console.debug('No active session to restore');
+        }
       } finally {
         setLoading(false);
       }
@@ -153,6 +159,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within AuthProvider');
+  if (!context) {
+    // In development, warn but return a safe default
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(
+        'useAuth was called outside of AuthProvider. Returning null context.'
+      );
+    }
+    // Return a safe default object to prevent crashes
+    return {
+      user: null,
+      accessToken: null,
+      login: () => {},
+      logout: async () => {},
+      isAuthenticated: false,
+      loading: false,
+    };
+  }
   return context;
 };
