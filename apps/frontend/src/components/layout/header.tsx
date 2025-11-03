@@ -2,8 +2,10 @@ import Image from 'next/image';
 import { ChevronDown, Search, ShoppingBag, User } from 'lucide-react';
 import React from 'react';
 import { CartDrawer } from './drawers/cartDrawer';
+import { useAuth } from '@/contexts/authContext';
 
 export default function Header({ isHome }: { isHome: boolean }) {
+  const { isAuthenticated } = useAuth();
   return (
     <header
       className={`bg-background text-foreground border-t-foreground border-b-foreground header grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center border-b px-12 py-9 text-center ${isHome ? 'border-t' : 'dark'}`}
@@ -62,8 +64,12 @@ export default function Header({ isHome }: { isHome: boolean }) {
             <Search className="h-5 w-5" />
             <span className="sr-only">Search</span>
           </li>
-          <li className="cursor-pointer">
+          <li className="relative cursor-pointer">
             <User className="h-5 w-5" />
+            {/* Green dot indicator */}
+            {isAuthenticated && (
+              <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full border-2 border-white bg-green-500"></span>
+            )}
             <span className="sr-only">Account</span>
           </li>
           <CartDrawer>
