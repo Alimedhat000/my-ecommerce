@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useCustomCursor } from '@/hooks/useCustomCursor';
 import { CustomCursor } from '@/components/ui/CustomCursor';
 import { useClickNavigation } from '@/hooks/useClickNavigation';
@@ -20,6 +20,8 @@ export default function ProductGallery({
   currentIndex: externalIndex,
   onIndexChange,
 }: ProductGalleryProps) {
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
   const [isZoomed, setIsZoomed] = useState(false);
   const [zoomIndex, setZoomIndex] = useState(0);
   const [isMaxZoomed, setIsMaxZoomed] = useState(false);
@@ -39,6 +41,18 @@ export default function ProductGallery({
       setInternalIndex(index);
     }
   };
+
+  const handleImageLoad = useCallback((index: number) => {
+    setLoadedImages((prev) => {
+      const newSet = new Set(prev);
+      newSet.add(index);
+      // Hide skeleton when first image loads
+      if (index === 0) {
+        setIsLoading(false);
+      }
+      return newSet;
+    });
+  }, []);
 
   const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
     if (!isMaxZoomed) {
@@ -66,7 +80,7 @@ export default function ProductGallery({
     handleMouseMove: cursorHandleMouseMove,
   } = useCustomCursor({
     totalItems: images.length,
-    currentIndex: currentIndex, // Pass current index
+    currentIndex: currentIndex,
     onIndexChange: handleIndexChange,
   });
 
@@ -103,21 +117,20 @@ export default function ProductGallery({
     const newIndex = (zoomIndex + 1) % images.length;
     setZoomIndex(newIndex);
     setIsMaxZoomed(false);
-    handleIndexChange(newIndex); // Sync with main gallery
+    handleIndexChange(newIndex);
   };
 
   const prevZoomImage = () => {
     const newIndex = (zoomIndex - 1 + images.length) % images.length;
     setZoomIndex(newIndex);
     setIsMaxZoomed(false);
-    handleIndexChange(newIndex); // Sync with main gallery
+    handleIndexChange(newIndex);
   };
 
   const toggleMaxZoom = () => {
     setIsMaxZoomed((prev) => !prev);
   };
 
-  // Update the goToItem function to use our handler
   const handleGoToItem = (index: number) => {
     handleIndexChange(index);
     if (isZoomed) {
@@ -125,7 +138,6 @@ export default function ProductGallery({
     }
   };
 
-  // Handle keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
       closeZoom();
@@ -135,6 +147,44 @@ export default function ProductGallery({
       nextZoomImage();
     }
   };
+
+  // Skeleton component
+  const Skeleton = () => (
+    <div className="grid grid-cols-1 gap-x-10 gap-y-6 xl:grid-cols-[auto_minmax(0,1fr)]">
+      <div className="order-2 flex gap-[0.625rem] xl:order-1 xl:flex-col">
+        {[...Array(Math.min(images.length || 4, 6))].map((_, i) => (
+          <div
+            key={i}
+            className="mb-1 h-[85px] w-[64px] animate-pulse rounded-md bg-gray-200"
+          />
+        ))}
+      </div>
+      <div className="order-1 aspect-[3/4] w-full animate-pulse rounded-2xl bg-gray-200 xl:order-2" />
+    </div>
+  );
+
+  if (isLoading) {
+    return (
+      <>
+        <Skeleton />
+        {/* Hidden images to trigger loading */}
+        <div className="sr-only" aria-hidden="true">
+          {images.slice(0, 1).map((image, index) => (
+            <Image
+              key={index}
+              src={image}
+              alt=""
+              width={900}
+              height={1200}
+              priority
+              onLoad={() => handleImageLoad(index)}
+              onError={() => handleImageLoad(index)}
+            />
+          ))}
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -179,6 +229,7 @@ export default function ProductGallery({
                   width={64}
                   height={85}
                   className="mb-1 rounded-md object-cover"
+                  sizes="64px"
                   priority
                 />
               </button>
@@ -200,15 +251,22 @@ export default function ProductGallery({
               style={{ transform: `translateX(-${currentIndex * 100}%)` }}
             >
               {images.map((image, index) => (
-                <div key={index} className="min-w-full">
+                <div key={index} className="relative min-w-full">
+                  {/* Skeleton for individual image */}
+                  {!loadedImages.has(index) && (
+                    <div className="absolute inset-0 animate-pulse bg-gray-200" />
+                  )}
                   <Image
                     src={image}
                     alt={`${title} image ${index + 1}`}
                     width={900}
                     height={1200}
-                    className="h-full w-full object-cover"
-                    priority
+                    className={`h-full w-full object-cover transition-opacity duration-300 ${
+                      loadedImages.has(index) ? 'opacity-100' : 'opacity-0'
+                    }`}
+                    priority={index === 0}
                     sizes="(max-width: 1024px) 100vw, 50vw"
+                    onLoad={() => handleImageLoad(index)}
                   />
                 </div>
               ))}
@@ -261,9 +319,8 @@ export default function ProductGallery({
               width={900}
               height={1200}
               className={`max-h-full max-w-full object-contain transition-transform duration-500 ease-in-out ${isMaxZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
-              priority
               onClick={handleImageClick}
-              sizes="(max-width: 1024px) 100vw, 50vw"
+              sizes="100vw"
               style={{
                 transform: isMaxZoomed ? 'scale(2)' : 'scale(1)',
                 transformOrigin: `${zoomOrigin.x * 100}% ${zoomOrigin.y * 100}%`,

@@ -21,14 +21,10 @@ interface ProductCardClientProps {
   compareAtPrice: number | undefined;
 }
 
-const getImageUrl = (src: string) => {
-  return src.includes('?') ? `${src}&width=800` : `${src}?width=800`;
-};
-
 const preloadImage = (src: string): Promise<void> => {
   return new Promise((resolve) => {
     const img = new window.Image();
-    img.src = getImageUrl(src);
+    img.src = src;
     img.onload = () => resolve();
     img.onerror = () => resolve();
   });
@@ -47,11 +43,11 @@ export default function ProductCardClient({
   price,
   compareAtPrice,
 }: ProductCardClientProps) {
-  // Use initialImage from server as default
   const [selectedImage, setSelectedImage] = useState(initialImage);
   const [displayedImage, setDisplayedImage] = useState(initialImage);
   const [nextImage, setNextImage] = useState<typeof initialImage | null>(null);
   const [fade, setFade] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const [preloadedImages, setPreloadedImages] = useState<Set<string>>(
     new Set([initialImage.src])
   );
@@ -134,28 +130,31 @@ export default function ProductCardClient({
           className="relative block h-full w-full"
         >
           <div className="relative h-full w-full">
+            {/* Skeleton placeholder */}
+            {!imageLoaded && (
+              <div className="absolute inset-0 animate-pulse bg-gray-200" />
+            )}
             <Image
               key={displayedImage.src}
-              src={getImageUrl(displayedImage.src)}
+              src={displayedImage.src}
               alt={displayedImage.alt ?? product.title}
               fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className={`object-cover transition-opacity duration-300 ${
-                fade ? 'opacity-0' : 'opacity-100'
+                fade ? 'opacity-0' : imageLoaded ? 'opacity-100' : 'opacity-0'
               }`}
-              priority={true}
+              onLoad={() => setImageLoaded(true)}
             />
             {nextImage && (
               <Image
                 key={nextImage.src}
-                src={getImageUrl(nextImage.src)}
+                src={nextImage.src}
                 alt={nextImage.alt ?? product.title}
                 fill
-                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 className={`absolute top-0 left-0 object-cover transition-opacity duration-300 ${
                   fade ? 'opacity-100' : 'opacity-0'
                 }`}
-                priority={true}
               />
             )}
           </div>
