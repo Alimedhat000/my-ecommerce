@@ -8,7 +8,7 @@ import prisma from '../config/database';
 
 // eslint-disable-next-line
 export interface AuthRequest<Params = any, ResBody = any, ReqBody = any, ReqQuery = any>
-    extends Request<Params, ResBody, ReqBody, ReqQuery> {
+> extends Request<Params, ResBody, ReqBody, ReqQuery> {
     userId?: number;
     user?: {
         id: number;

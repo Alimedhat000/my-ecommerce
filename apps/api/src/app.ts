@@ -24,7 +24,7 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 
 // ---------- Basic Express hardening ----------
 app.disable('x-powered-by');
-app.set('trust proxy', NODE_ENV === 'production' ? 'loopback' : false);
+app.set('trust proxy', NODE_ENV === 'production');
 
 // ---------- Parse / Body ----------
 app.use(express.json({ limit: '10kb' }));
@@ -55,7 +55,7 @@ app.use(hpp());
 const allowedOriginsRaw = process.env.ALLOWED_ORIGINS || '';
 const allowedOrigins = allowedOriginsRaw
     .split(',')
-    .map((s) => s.trim())
+    .map((s: string) => s.trim())
     .filter(Boolean);
 
 const corsOptions = {
@@ -63,7 +63,7 @@ const corsOptions = {
         origin: string | undefined,
         callback: (err: Error | null, allowed?: boolean) => void
     ) => {
-        console.log('Request Origin:', origin);
+        logger.info(`Request Origin: ${origin}`);
         if (!origin) return callback(null, true);
         if (allowedOrigins.includes(origin)) return callback(null, true);
         return callback(new Error('CORS policy: This origin is not allowed'));
@@ -90,6 +90,7 @@ const apiLimiter = rateLimit({
         error: 'Too many requests, please try again later.',
     },
 });
+
 // Serve static files (CSS, JS, Images if needed)
 app.use(express.static(path.join(__dirname, '../public')));
 
@@ -130,8 +131,8 @@ if (process.env.NODE_ENV === 'production') {
     app.use(
         '/api-docs',
         basicAuth({ users: { [swaggerUser]: swaggerPass }, challenge: true }),
-        (req: any, res: any, next: any) => {
-            res.removeHeader('Content-Security-Policy'); // disable CSP for Swagger
+        (_req: Request, _res: Response, next: NextFunction) => {
+            _res.removeHeader('Content-Security-Policy'); // disable CSP for Swagger
             next();
         },
         swaggerUi.serve,
@@ -140,8 +141,8 @@ if (process.env.NODE_ENV === 'production') {
 } else {
     app.use(
         '/api-docs',
-        (req: any, res: any, next: any) => {
-            res.removeHeader('Content-Security-Policy'); // disable CSP for Swagger
+        (_req: Request, _res: Response, next: NextFunction) => {
+            _res.removeHeader('Content-Security-Policy'); // disable CSP for Swagger
             next();
         },
         swaggerUi.serve,

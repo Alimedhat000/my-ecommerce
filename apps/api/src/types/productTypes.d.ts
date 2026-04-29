@@ -1,4 +1,4 @@
-import { ProductStatus } from '@prisma/client';
+import type { ProductStatus } from '@prisma/client';
 
 export interface ProductFilters {
     status?: ProductStatus;
