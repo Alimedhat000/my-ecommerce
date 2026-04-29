@@ -1,18 +1,29 @@
 {
   "name": "my-ecommerce",
-  "packageManager": "yarn@4.9.1",
   "private": true,
-  "workspaces": [
-    "apps/*"
-  ],
+  "packageManager": "pnpm@10.33.2",
   "scripts": {
-    "dev": "concurrently \"yarn workspace frontend dev\" \"yarn workspace backend dev\""
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "turbo": "^2.0.0",
+    "typescript": "^5.4.0"
   },
-  "resolutions": {
-    "@types/express-serve-static-core": "4.17.41",
-    "@types/express": "4.17.23"
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@esbuild/*",
+      "@prisma/client",
+      "@prisma/engines",
+      "@scarf/scarf",
+      "bcrypt",
+      "es5-ext",
+      "esbuild",
+      "prisma",
+      "sharp",
+      "unrs-resolver"
+    ]
   }
 }

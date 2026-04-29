@@ -1,0 +1,27 @@
+{
+  "name": "@repo/api",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsup src/index.ts --format esm --dts",
+    "start": "node dist/index.js",
+    "gen:spec": "tsx src/openapi/spec.ts > openapi.json"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "better-auth": "^1.0.0",
+    "drizzle-orm": "^0.45.2",
+    "pg": "^8.13.0",
+    "jsonwebtoken": "^9.0.0",
+    "bcrypt": "^5.1.0",
+    "cloudinary": "^2.6.0"
+  },
+  "devDependencies": {
+    "@repo/tsconfig": "workspace:*",
+    "@repo/types": "workspace:*",
+    "tsx": "^4.19.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0"
+  }
+}
