@@ -1,7 +1,5 @@
 import { defineConfig } from 'vitest/config';
 import dotenv from 'dotenv';
-import app from './src/app';
-import logger from './src/utils/logger';
 
 dotenv.config({ path: '.env.test' });
 
@@ -16,12 +14,9 @@ export default defineConfig({
             exclude: [
                 'node_modules/',
                 'src/tests/',
-                'src/app.ts',
-                '*.config.*',
-                'prisma/',
-                'dist/',
                 'src/config/',
-                '**/logger.ts',
+                'dist/',
+                'src/utils/logger.ts',
             ],
         },
     },

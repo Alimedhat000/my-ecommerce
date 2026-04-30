@@ -1,14 +1,14 @@
 import express from 'express';
 import {
-    getMe,
-    updateMe,
-    updatePassword,
-    getAddresses,
-    createAddresses,
-    updateAddress,
-    deleteAddress,
-    getOrders,
-    getOrder,
+  getMe,
+  updateMe,
+  updatePassword,
+  getAddresses,
+  createAddresses,
+  updateAddress,
+  deleteAddress,
+  getOrders,
+  getOrder,
 } from '../controllers/userController';
 
 const router = express.Router();
