@@ -1,0 +1,46 @@
+
+
+> @repo/web@0.1.0 build /home/ali/Coding/web_dev/my-ecommerce/apps/web
+> next build
+
+   [1m[38;2;173;127;168m▲ Next.js 15.5.3[39m[22m
+   - Environments: .env
+
+ [37m[1m [22m[39m Creating an optimized production build ...
+ [32m[1m✓[22m[39m Compiled successfully in 3.0s
+ [37m[1m [22m[39m Skipping validation of types
+[?25l [37m[1m [22m[39m Linting  [36m.[39m[2K[1G [37m[1m [22m[39m Linting  [36m..[39m[2K[1G [37m[1m [22m[39m Linting  [36m...[39m[2K[1G [37m[1m [22m[39m Linting  [36m.[39m[2K[1G [37m[1m [22m[39m Linting  [36m..[39m[2K[1G [37m[1m [22m[39m Linting  [36m...[39m[2K[1G [37m[1m [22m[39m Linting  [36m.[39m[2K[1G [37m[1m [22m[39m Linting  [36m..[39m[2K[1G [37m[1m [22m[39m Linting  [36m...[39m[2K[1G [37m[1m [22m[39m Linting  [36m.[39m[2K[1G[?25h
+./src/app/user/orders/_components/orderFooter.tsx
+14:3  Warning: 'orderId' is defined but never used.  @typescript-eslint/no-unused-vars
+16:11  Warning: '_status' is defined but never used.  @typescript-eslint/no-unused-vars
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+[?25l [36m.[39m [2K[1G[?25h    [32m[1m✓[22m[39m Linting 
+[?25l [37m[1m [22m[39m Collecting page data  [36m.[39m[2K[1G [37m[1m [22m[39m Collecting page data  [36m..[39m[2K[1G [37m[1m [22m[39m Collecting page data  [36m...[39m[2K[1G [37m[1m [22m[39m Collecting page data  [36m.[39m[2K[1G[?25h [37m[1m [22m[39m Collecting page data     [32m[1m✓[22m[39m Collecting page data 
+[?25l [37m[1m [22m[39m Generating static pages (0/12)  [36m[    ][39m[2K[1G [37m[1m [22m[39m Generating static pages (0/12)  [36m[=   ][39m[2K[1G [37m[1m [22m[39m Generating static pages (0/12)  [36m[==  ][39m[2K[1G [37m[1m [22m[39m Generating static pages (0/12)  [36m[=== ][39m[2K[1G[?25h [32m[1m✓[22m[39m Generating static pages (12/12)
+[?25l [37m[1m [22m[39m Finalizing page optimization  [36m.[39m[?25l [37m[1m [22m[39m Collecting build traces  [36m.[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m..[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m..[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m...[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m...[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m.[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m.[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m..[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m..[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m...[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m...[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m.[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m.[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m..[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m..[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m...[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m...[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m.[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m.[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m..[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m..[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m...[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m...[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m.[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m.[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m..[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m..[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m...[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m...[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m.[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m.[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m..[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m..[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m...[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m...[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m.[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m.[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m..[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m..[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m...[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m...[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m.[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m.[39m[2K[1G[?25h [37m[1m [22m[39m Collecting build traces     [32m[1m✓[22m[39m Collecting build traces 
+[2K[1G[?25h [37m[1m [22m[39m Finalizing page optimization     [32m[1m✓[22m[39m Finalizing page optimization 
+
+[4mRoute (app)[24m                                 [4mSize[24m  [4mFirst Load JS[24m  [4m[24m  [4m[24m
+┌ ○ /                                      131 B         [37m[1m101 kB[22m[39m
+├ ○ /_not-found                            990 B         [37m[1m102 kB[22m[39m
+├ ○ /auth/forgot-password                2.36 kB         [37m[1m120 kB[22m[39m
+├ ○ /auth/login                          1.11 kB         [37m[1m215 kB[22m[39m
+├ ○ /auth/register                       1.37 kB         [37m[1m215 kB[22m[39m
+├ ○ /cart                                3.38 kB         [37m[1m118 kB[22m[39m
+├ ○ /collections                           131 B         [37m[1m101 kB[22m[39m
+├ ƒ /collections/[handle]                40.7 kB         [37m[1m176 kB[22m[39m
+├ ○ /products                              131 B         [37m[1m101 kB[22m[39m
+├ ƒ /products/[handle]                   6.11 kB         [37m[1m141 kB[22m[39m
+├ ƒ /user/orders                         3.11 kB         [37m[1m134 kB[22m[39m
+└ ○ /user/profile                        5.99 kB         [37m[1m207 kB[22m[39m
++ First Load JS shared by all             [37m[1m101 kB[22m[39m
+  ├ chunks/4ffbce5d-ad10b6f9145f9730.js  54.2 kB
+  ├ chunks/648-bae635856d0f0f32.js         45 kB
+  └ other shared chunks (total)          1.93 kB
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+[?25h

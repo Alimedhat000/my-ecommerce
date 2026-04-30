@@ -1,0 +1,12 @@
+
+
+> @repo/web@0.1.0 lint /home/ali/Coding/web_dev/my-ecommerce/apps/web
+> eslint
+
+[0m[0m
+[0m[4m/home/ali/Coding/web_dev/my-ecommerce/apps/web/src/app/user/orders/_components/orderFooter.tsx[24m[0m
+[0m  [2m14:3[22m   [33mwarning[39m  'orderId' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m16:11[22m  [33mwarning[39m  '_status' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[33m[1m✖ 2 problems (0 errors, 2 warnings)[22m[39m[0m
+[0m[33m[1m[22m[39m[0m
